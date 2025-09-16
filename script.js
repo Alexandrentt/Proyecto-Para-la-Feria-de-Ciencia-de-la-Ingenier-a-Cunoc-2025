@@ -1,13 +1,15 @@
 // Configuración
 const MODEL_URL = './my_model/';
-let model, webcam, currentMode = 'webcam';
-let isModelLoaded = false;
+let model, cocoModel, webcam, currentMode = 'webcam';
+let isModelLoaded = false, isCocoLoaded = false;
+let detectedObjects = [];
+let selectedObjectIndex = -1;
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', initApp);
 
 async function initApp() {
-    console.log('🚀 Iniciando Clasificador de Basura');
+    console.log('🚀 Iniciando Clasificador de Basura con Detección Multiobjeto');
     updateStatus('🔄 Verificando librerías...', 'loading');
 
     // Verificar librerías
@@ -21,16 +23,24 @@ async function initApp() {
         return;
     }
 
+    if (typeof cocoSsd === 'undefined') {
+        updateStatus('❌ COCO-SSD no cargado', 'error');
+        return;
+    }
+
     console.log('✅ Librerías cargadas correctamente');
 
-    // Cargar modelo
-    await loadModel();
+    // Cargar modelos en paralelo
+    await Promise.all([
+        loadModel(),
+        loadCocoModel()
+    ]);
 
     // Configurar eventos
     setupEventListeners();
 
-    // Iniciar modo webcam si el modelo está cargado
-    if (isModelLoaded) {
+    // Iniciar modo webcam si los modelos están cargados
+    if (isModelLoaded && isCocoLoaded) {
         await initWebcam();
     }
 }
@@ -64,20 +74,48 @@ async function loadModel() {
     }
 }
 
+async function loadCocoModel() {
+    try {
+        updateStatus('📦 Cargando modelo de detección de objetos...', 'loading');
+
+        // Cargar modelo COCO-SSD
+        cocoModel = await cocoSsd.load();
+        console.log('✅ Modelo COCO-SSD cargado:', cocoModel);
+
+        isCocoLoaded = true;
+        updateStatus('✅ Modelo de detección cargado correctamente', 'success');
+
+    } catch (error) {
+        console.error('❌ Error cargando COCO-SSD:', error);
+        updateStatus(`❌ Error COCO-SSD: ${error.message}`, 'error');
+        isCocoLoaded = false;
+    }
+}
+
 async function initWebcam() {
-    if (!isModelLoaded) {
-        updateStatus('❌ Modelo no cargado', 'error');
+    if (!isModelLoaded || !isCocoLoaded) {
+        updateStatus('❌ Modelos no cargados completamente', 'error');
         return;
     }
 
     try {
         updateStatus('🎥 Iniciando cámara...', 'loading');
 
-        // Crear webcam
-        const flip = true;
-        webcam = new tmImage.Webcam(224, 224, flip);
+        // Detectar si es móvil para usar cámara trasera
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const constraints = {
+            video: {
+                facingMode: isMobile ? 'environment' : 'user',
+                width: 640,
+                height: 480
+            }
+        };
 
-        await webcam.setup();
+        // Crear webcam
+        const flip = !isMobile; // No flip en móviles (cámara trasera ya está correcta)
+        webcam = new tmImage.Webcam(640, 480, flip);
+
+        await webcam.setup(constraints);
         await webcam.play();
 
         // Mostrar canvas
@@ -86,7 +124,10 @@ async function initWebcam() {
         canvas.height = webcam.canvas.height;
         canvas.style.display = 'block';
 
-        updateStatus('🎥 Cámara activa - Muestra un objeto', 'success');
+        updateStatus('🎥 Cámara activa - Haz clic en un objeto para clasificarlo', 'success');
+
+        // Reiniciar selección
+        selectedObjectIndex = -1;
 
         // Iniciar predicción continua
         predictWebcam();
@@ -110,7 +151,7 @@ async function initWebcam() {
 }
 
 async function predictWebcam() {
-    if (webcam && model && currentMode === 'webcam') {
+    if (webcam && model && cocoModel && currentMode === 'webcam') {
         // Actualizar webcam
         webcam.update();
 
@@ -119,9 +160,28 @@ async function predictWebcam() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(webcam.canvas, 0, 0);
 
-        // Hacer predicción
-        const predictions = await model.predict(webcam.canvas);
-        displayPrediction(predictions);
+        // Detectar objetos con COCO-SSD
+        const cocoPredictions = await cocoModel.detect(canvas);
+
+        // Filtrar objetos relevantes para clasificación de basura
+        detectedObjects = filterRelevantObjects(cocoPredictions);
+
+        // Dibujar bounding boxes
+        drawBoundingBoxes(ctx, detectedObjects);
+
+        // Si hay un objeto seleccionado, hacer predicción solo en esa región
+        if (selectedObjectIndex >= 0 && selectedObjectIndex < detectedObjects.length) {
+            const selectedObj = detectedObjects[selectedObjectIndex];
+            const croppedCanvas = cropObjectFromCanvas(canvas, selectedObj);
+
+            // Hacer predicción en el objeto seleccionado
+            const predictions = await model.predict(croppedCanvas);
+            displayPrediction(predictions);
+        } else {
+            // Mostrar mensaje para seleccionar objeto
+            document.getElementById('prediction').textContent = 'Haz clic en un objeto para clasificarlo';
+            document.getElementById('confidence').textContent = '';
+        }
 
         // Continuar el loop
         requestAnimationFrame(predictWebcam);
@@ -157,6 +217,10 @@ function setupEventListeners() {
             handleImageFile(e.target.files[0]);
         }
     });
+
+    // Event listener para selección de objetos en canvas
+    const canvas = document.getElementById('webcam-canvas');
+    canvas.addEventListener('click', handleCanvasClick);
 }
 
 function switchMode(mode) {
@@ -277,4 +341,101 @@ function updateStatus(message, type) {
 
     statusEl.className = `status ${type}`;
     console.log(message);
+}
+
+// Funciones para detección multiobjeto
+function filterRelevantObjects(predictions) {
+    // Objetos que podrían ser basura o reciclables
+    const relevantClasses = [
+        'bottle', 'cup', 'bowl', 'apple', 'banana', 'orange', 'carrot',
+        'book', 'cell phone', 'remote', 'keyboard', 'mouse', 'laptop',
+        'paper', 'cardboard', 'plastic', 'can', 'box'
+    ];
+
+    return predictions.filter(pred =>
+        pred.score > 0.5 && relevantClasses.some(cls =>
+            pred.class.toLowerCase().includes(cls.toLowerCase())
+        )
+    );
+}
+
+function drawBoundingBoxes(ctx, objects) {
+    objects.forEach((obj, index) => {
+        const [x, y, width, height] = obj.bbox;
+
+        // Color del bounding box
+        const isSelected = index === selectedObjectIndex;
+        ctx.strokeStyle = isSelected ? '#ff0000' : '#00ff00';
+        ctx.lineWidth = isSelected ? 4 : 2;
+        ctx.fillStyle = isSelected ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)';
+
+        // Dibujar rectángulo
+        ctx.fillRect(x, y, width, height);
+        ctx.strokeRect(x, y, width, height);
+
+        // Dibujar etiqueta
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '14px Arial';
+        const label = `${obj.class} ${(obj.score * 100).toFixed(1)}%`;
+        const textWidth = ctx.measureText(label).width;
+
+        ctx.fillRect(x, y - 25, textWidth + 10, 20);
+        ctx.fillStyle = '#000000';
+        ctx.fillText(label, x + 5, y - 10);
+
+        // Dibujar número del objeto
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x + width - 15, y + 15, 12, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#000000';
+        ctx.fillText((index + 1).toString(), x + width - 20, y + 20);
+    });
+}
+
+function cropObjectFromCanvas(canvas, obj) {
+    const [x, y, width, height] = obj.bbox;
+    const croppedCanvas = document.createElement('canvas');
+    const croppedCtx = croppedCanvas.getContext('2d');
+
+    // Agregar padding alrededor del objeto
+    const padding = 10;
+    const cropX = Math.max(0, x - padding);
+    const cropY = Math.max(0, y - padding);
+    const cropWidth = Math.min(canvas.width - cropX, width + 2 * padding);
+    const cropHeight = Math.min(canvas.height - cropY, height + 2 * padding);
+
+    croppedCanvas.width = cropWidth;
+    croppedCanvas.height = cropHeight;
+
+    croppedCtx.drawImage(
+        canvas,
+        cropX, cropY, cropWidth, cropHeight,
+        0, 0, cropWidth, cropHeight
+    );
+
+    return croppedCanvas;
+}
+
+function handleCanvasClick(event) {
+    if (!detectedObjects.length) return;
+
+    const canvas = document.getElementById('webcam-canvas');
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Verificar si el clic está dentro de algún bounding box
+    for (let i = 0; i < detectedObjects.length; i++) {
+        const [objX, objY, objWidth, objHeight] = detectedObjects[i].bbox;
+        if (x >= objX && x <= objX + objWidth &&
+            y >= objY && y <= objY + objHeight) {
+            selectedObjectIndex = i;
+            console.log(`Objeto seleccionado: ${detectedObjects[i].class}`);
+            return;
+        }
+    }
+
+    // Si no se hizo clic en ningún objeto, deseleccionar
+    selectedObjectIndex = -1;
 }
