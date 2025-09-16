@@ -374,18 +374,57 @@ h1 {
     100% { transform: rotate(360deg); }
 }
 
-/* Selector de modo de escaneo */
-.scan-mode-selector {
+/* Configuración */
+.config-section {
     margin-bottom: 30px;
     padding: 20px;
     background: linear-gradient(45deg, #f8f9fa, #e9ecef);
     border-radius: 15px;
 }
 
-.scan-mode-selector h3 {
+.config-section h3 {
     color: #333;
-    margin-bottom: 15px;
-    font-size: 1.2rem;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    text-align: center;
+}
+
+.config-group {
+    margin-bottom: 25px;
+}
+
+.config-group h4 {
+    color: #495057;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.capture-controls {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.capture-btn {
+    padding: 15px 30px;
+    background: linear-gradient(45deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.capture-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.capture-btn:active {
+    transform: translateY(0);
 }
 
 .mode-options {

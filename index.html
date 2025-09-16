@@ -41,17 +41,44 @@
                     <p>3. ¡El sistema clasificará automáticamente tu basura!</p>
                 </div>
 
-                <!-- Selector de Modo de Escaneo -->
-                <div class="scan-mode-selector">
-                    <h3>🎯 Modo de Escaneo:</h3>
-                    <div class="mode-options">
-                        <button id="single-mode-btn" class="mode-option active" onclick="setScanMode('single')">
-                            🔍 Uno por Uno
-                            <small>Sistema tradicional</small>
-                        </button>
-                        <button id="multi-mode-btn" class="mode-option" onclick="setScanMode('multi')">
-                            🎯 Múltiples Objetos
-                            <small>Con detección automática</small>
+                <!-- Configuración -->
+                <div class="config-section">
+                    <h3>⚙️ Configuración</h3>
+
+                    <!-- Selector de Modo de Escaneo -->
+                    <div class="config-group">
+                        <h4>🎯 Modo de Escaneo:</h4>
+                        <div class="mode-options">
+                            <button id="single-mode-btn" class="mode-option active" onclick="setScanMode('single')">
+                                🔍 Uno por Uno
+                                <small>Sistema tradicional</small>
+                            </button>
+                            <button id="multi-mode-btn" class="mode-option" onclick="setScanMode('multi')">
+                                🎯 Múltiples Objetos
+                                <small>Con detección automática</small>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Selector de Modo Webcam -->
+                    <div class="config-group">
+                        <h4>📷 Modo Webcam:</h4>
+                        <div class="mode-options">
+                            <button id="continuous-mode-btn" class="mode-option active" onclick="setWebcamMode('continuous')">
+                                🔄 Continua
+                                <small>Escaneo en tiempo real</small>
+                            </button>
+                            <button id="capture-mode-btn" class="mode-option" onclick="setWebcamMode('capture')">
+                                📸 Captura
+                                <small>Tomar foto y analizar</small>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Captura (solo visible en modo captura) -->
+                    <div id="capture-controls" class="capture-controls" style="display: none;">
+                        <button id="capture-btn" class="capture-btn" onclick="captureAndClassify()">
+                            📸 Capturar y Clasificar
                         </button>
                     </div>
                 </div>

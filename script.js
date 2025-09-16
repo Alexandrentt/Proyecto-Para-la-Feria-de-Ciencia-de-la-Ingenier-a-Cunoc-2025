@@ -11,6 +11,7 @@ let trainingDataset = [];
 let currentImageData = null;
 let currentView = 'main';
 let scanMode = 'single'; // 'single' o 'multi'
+let webcamMode = 'continuous'; // 'continuous' o 'capture'
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', initApp);
@@ -107,8 +108,14 @@ async function loadCocoModel() {
 }
 
 async function initWebcam() {
-    if (!isModelLoaded || !isCocoLoaded) {
-        updateStatus('❌ Modelos no cargados completamente', 'error');
+    if (!isModelLoaded) {
+        updateStatus('❌ Modelo de basura no cargado', 'error');
+        return;
+    }
+
+    // Solo requerir COCO-SSD si está en modo multi
+    if (scanMode === 'multi' && !isCocoLoaded) {
+        updateStatus('❌ COCO-SSD no cargado para modo múltiple', 'error');
         return;
     }
 
@@ -138,9 +145,16 @@ async function initWebcam() {
         canvas.height = webcam.canvas.height;
         canvas.style.display = 'block';
 
-        const statusMessage = scanMode === 'multi'
-            ? '🎥 Cámara activa - Haz clic en un objeto para clasificarlo'
-            : '🎥 Cámara activa - Muestra un objeto para clasificarlo';
+        let statusMessage = '🎥 Cámara activa';
+
+        if (webcamMode === 'continuous') {
+            statusMessage += scanMode === 'multi'
+                ? ' - Haz clic en un objeto para clasificarlo'
+                : ' - Muestra un objeto para clasificarlo';
+        } else {
+            statusMessage += ' - Presiona "Capturar" para analizar';
+        }
+
         updateStatus(statusMessage, 'success');
 
         // Reiniciar selección
@@ -168,7 +182,7 @@ async function initWebcam() {
 }
 
 async function predictWebcam() {
-    if (webcam && model && currentMode === 'webcam') {
+    if (webcam && model && currentMode === 'webcam' && webcamMode === 'continuous') {
         // Actualizar webcam
         webcam.update();
 
@@ -509,27 +523,50 @@ function toggleMenu() {
 }
 
 function showSection(sectionName) {
-    // Ocultar todas las vistas
+    // Ocultar todas las vistas con animación
     document.querySelectorAll('.view').forEach(view => {
         view.classList.remove('active');
+        view.style.display = 'none';
     });
 
-    // Mostrar la vista seleccionada
+    // Mostrar la vista seleccionada con animación
     const targetView = document.getElementById(sectionName + '-view');
     if (targetView) {
-        targetView.classList.add('active');
+        targetView.style.display = 'block';
+        // Pequeño delay para permitir que el display se aplique antes de la animación
+        setTimeout(() => {
+            targetView.classList.add('active');
+        }, 10);
+
         currentView = sectionName;
 
         // Actualizar gráficas si es necesario
         if (sectionName === 'charts') {
             setTimeout(() => {
                 updateCharts();
-            }, 100);
+            }, 200);
         }
+
+        // Actualizar título de la página
+        updatePageTitle(sectionName);
     }
 
     // Ocultar menú
     document.getElementById('dropdown-menu').classList.remove('show');
+}
+
+function updatePageTitle(sectionName) {
+    const titles = {
+        'main': '♻️ Clasificador de Basura IA',
+        'history': '📊 Historial de Clasificaciones',
+        'charts': '📈 Estadísticas',
+        'training': '🧠 Dataset de Entrenamiento'
+    };
+
+    const header = document.querySelector(`#${sectionName}-view header h1`);
+    if (header && titles[sectionName]) {
+        header.textContent = titles[sectionName];
+    }
 }
 
 function setScanMode(mode) {
@@ -549,6 +586,72 @@ function setScanMode(mode) {
     }
 
     console.log(`Modo de escaneo cambiado a: ${mode}`);
+}
+
+function setWebcamMode(mode) {
+    webcamMode = mode;
+
+    // Actualizar botones
+    document.getElementById('continuous-mode-btn').classList.toggle('active', mode === 'continuous');
+    document.getElementById('capture-mode-btn').classList.toggle('active', mode === 'capture');
+
+    // Mostrar/ocultar controles de captura
+    const captureControls = document.getElementById('capture-controls');
+    captureControls.style.display = mode === 'capture' ? 'block' : 'none';
+
+    // Reiniciar webcam si está activa
+    if (webcam && currentMode === 'webcam') {
+        initWebcam();
+    }
+
+    console.log(`Modo webcam cambiado a: ${mode}`);
+}
+
+async function captureAndClassify() {
+    if (!webcam || !model) {
+        alert('Webcam o modelo no disponible');
+        return;
+    }
+
+    try {
+        // Capturar frame actual
+        const canvas = document.getElementById('webcam-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Actualizar para obtener el frame más reciente
+        webcam.update();
+        ctx.drawImage(webcam.canvas, 0, 0);
+
+        // Guardar imagen para feedback
+        currentImageData = canvas.toDataURL('image/jpeg', 0.8);
+
+        // Procesar según el modo de escaneo
+        if (scanMode === 'multi' && cocoModel) {
+            // Detectar objetos
+            const cocoPredictions = await cocoModel.detect(canvas);
+            detectedObjects = filterRelevantObjects(cocoPredictions);
+
+            if (detectedObjects.length > 0) {
+                // Usar el primer objeto detectado
+                const selectedObj = detectedObjects[0];
+                const croppedCanvas = cropObjectFromCanvas(canvas, selectedObj);
+                const predictions = await model.predict(croppedCanvas);
+                displayPrediction(predictions);
+            } else {
+                // No se detectaron objetos, usar imagen completa
+                const predictions = await model.predict(canvas);
+                displayPrediction(predictions);
+            }
+        } else {
+            // Modo single o sin COCO-SSD
+            const predictions = await model.predict(canvas);
+            displayPrediction(predictions);
+        }
+
+    } catch (error) {
+        console.error('Error en captura y clasificación:', error);
+        updateStatus('❌ Error al procesar imagen', 'error');
+    }
 }
 
 // Funciones para el modal de ayuda
