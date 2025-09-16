@@ -111,8 +111,7 @@ function updatePageTitle(sectionName) {
 // Cerrar menú al hacer clic fuera
 document.addEventListener('click', (e) => {
     const menu = document.getElementById('dropdown-menu');
-    const menuToggle = document.getElementById('menu-toggle');
-    if (!menu.contains(e.target) && !menuToggle.contains(e.target)) {
+    if (!menu.contains(e.target)) {
         menu.classList.remove('show');
     }
 });

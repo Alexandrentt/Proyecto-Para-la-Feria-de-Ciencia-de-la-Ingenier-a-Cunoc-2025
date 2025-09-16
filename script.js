@@ -31,7 +31,7 @@ async function initApp() {
         return;
     }
 
-    if (typeof window.Vision === 'undefined') {
+    if (typeof FilesetResolver === 'undefined') {
         updateStatus('❌ MediaPipe Tasks Vision no cargado', 'error');
         return;
     }
@@ -94,12 +94,11 @@ async function loadObjectDetector() {
         updateStatus('📦 Cargando modelo de detección de objetos...', 'loading');
 
         // Verificar que la librería esté disponible
-        if (typeof window.Vision === 'undefined') {
+        if (typeof FilesetResolver === 'undefined') {
             throw new Error('MediaPipe Tasks Vision not loaded. Using fallback mode.');
         }
 
         // Cargar modelo MediaPipe Object Detector
-        const { FilesetResolver, ObjectDetector } = window.Vision;
         const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
         objectDetector = await ObjectDetector.createFromOptions(vision, {
             baseOptions: {
@@ -277,12 +276,6 @@ async function predictWebcam() {
 }
 
 function setupEventListeners() {
-    // Menú desplegable
-    const menuToggle = document.getElementById('menu-toggle');
-    menuToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMenu();
-    });
 
     // Drag & Drop para imágenes
     const uploadArea = document.querySelector('.upload-area');
@@ -320,8 +313,7 @@ function setupEventListeners() {
     // Cerrar menú al hacer clic fuera
     document.addEventListener('click', (e) => {
         const menu = document.getElementById('dropdown-menu');
-        const menuToggle = document.getElementById('menu-toggle');
-        if (!menu.contains(e.target) && !menuToggle.contains(e.target)) {
+        if (!menu.contains(e.target)) {
             menu.classList.remove('show');
         }
     });
