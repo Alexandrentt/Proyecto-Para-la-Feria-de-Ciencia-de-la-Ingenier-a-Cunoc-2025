@@ -4,6 +4,7 @@ let model, cocoModel, webcam, currentMode = 'webcam';
 let isModelLoaded = false, isCocoLoaded = false;
 let detectedObjects = [];
 let selectedObjectIndex = -1;
+let classificationHistory = [];
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', initApp);
@@ -38,6 +39,9 @@ async function initApp() {
 
     // Configurar eventos
     setupEventListeners();
+
+    // Cargar historial
+    loadHistory();
 
     // Iniciar modo webcam si los modelos están cargados
     if (isModelLoaded && isCocoLoaded) {
@@ -314,6 +318,9 @@ function displayPrediction(predictions) {
     document.getElementById('prediction').textContent = label;
     document.getElementById('confidence').textContent = `Confianza: ${confidence}%`;
 
+    // Guardar en historial
+    saveToHistory(label, confidence, topPrediction.className);
+
     console.log('🎯 Predicción:', label, `(${confidence}%)`);
 }
 
@@ -467,3 +474,92 @@ document.addEventListener('keydown', (event) => {
         hideHelp();
     }
 });
+
+// Funciones para el historial
+function saveToHistory(label, confidence, originalClass) {
+    const historyItem = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        label: label,
+        confidence: parseFloat(confidence),
+        originalClass: originalClass,
+        category: getCategoryFromLabel(label)
+    };
+
+    classificationHistory.unshift(historyItem); // Agregar al inicio
+
+    // Limitar a 50 elementos para no sobrecargar
+    if (classificationHistory.length > 50) {
+        classificationHistory = classificationHistory.slice(0, 50);
+    }
+
+    // Guardar en localStorage
+    localStorage.setItem('classificationHistory', JSON.stringify(classificationHistory));
+
+    // Actualizar display
+    updateHistoryDisplay();
+}
+
+function loadHistory() {
+    const saved = localStorage.getItem('classificationHistory');
+    if (saved) {
+        classificationHistory = JSON.parse(saved);
+        updateHistoryDisplay();
+    }
+}
+
+function updateHistoryDisplay() {
+    const historyList = document.getElementById('history-list');
+
+    if (classificationHistory.length === 0) {
+        historyList.innerHTML = '<p class="no-history">No hay clasificaciones aún</p>';
+        return;
+    }
+
+    const historyHTML = classificationHistory.map(item => {
+        const time = new Date(item.timestamp).toLocaleString();
+        return `
+            <div class="history-item ${item.category.toLowerCase().replace(' ', '-')}" data-id="${item.id}">
+                <div class="history-item-header">
+                    <div class="history-item-result">${item.label}</div>
+                    <div class="history-item-time">${time}</div>
+                </div>
+                <div class="history-item-confidence">Confianza: ${item.confidence}%</div>
+            </div>
+        `;
+    }).join('');
+
+    historyList.innerHTML = historyHTML;
+}
+
+function clearHistory() {
+    if (confirm('¿Estás seguro de que quieres limpiar todo el historial?')) {
+        classificationHistory = [];
+        localStorage.removeItem('classificationHistory');
+        updateHistoryDisplay();
+    }
+}
+
+function exportHistory() {
+    if (classificationHistory.length === 0) {
+        alert('No hay datos para exportar');
+        return;
+    }
+
+    const dataStr = JSON.stringify(classificationHistory, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `clasificaciones_basura_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function getCategoryFromLabel(label) {
+    if (label.includes('🍌')) return 'organic';
+    if (label.includes('♻️')) return 'recyclable';
+    if (label.includes('🚫')) return 'non-recyclable';
+    return 'unknown';
+}

@@ -66,6 +66,18 @@
                 <div id="prediction" class="prediction">Esperando clasificación...</div>
                 <div id="confidence" class="confidence"></div>
             </div>
+
+            <!-- Historial de Clasificaciones -->
+            <div class="history-section">
+                <h3>📊 Historial de Clasificaciones</h3>
+                <div id="history-list" class="history-list">
+                    <p class="no-history">No hay clasificaciones aún</p>
+                </div>
+                <div class="history-actions">
+                    <button id="clear-history-btn" class="clear-btn" onclick="clearHistory()">🗑️ Limpiar Historial</button>
+                    <button id="export-history-btn" class="export-btn" onclick="exportHistory()">📤 Exportar Datos</button>
+                </div>
+            </div>
         </div>
     </div>
 
