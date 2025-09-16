@@ -19,6 +19,84 @@ body {
     padding: 20px;
 }
 
+/* Menú desplegable */
+.menu-container {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.menu-toggle {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #007bff;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.menu-toggle:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    min-width: 200px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-menu button {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.2s ease;
+    border-bottom: 1px solid #eee;
+}
+
+.dropdown-menu button:last-child {
+    border-bottom: none;
+}
+
+.dropdown-menu button:hover {
+    background: #f8f9fa;
+}
+
+.dropdown-menu button:active {
+    background: #e9ecef;
+}
+
+/* Vistas */
+.view {
+    display: none;
+}
+
+.view.active {
+    display: block;
+}
+
 header {
     text-align: center;
     color: white;
@@ -296,26 +374,80 @@ h1 {
     100% { transform: rotate(360deg); }
 }
 
-/* Estilos para ayuda */
-.help-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid white;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+/* Selector de modo de escaneo */
+.scan-mode-selector {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
 }
 
-.help-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+.scan-mode-selector h3 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.mode-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.mode-option {
+    padding: 15px;
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.mode-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.mode-option.active {
+    border-color: #007bff;
+    background: #e7f3ff;
+    color: #007bff;
+}
+
+.mode-option small {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* Botón de ayuda fijo */
+.help-btn-fixed {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #007bff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    color: #007bff;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.help-btn-fixed:hover {
+    background: rgba(255, 255, 255, 1);
     transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 
 .help-modal {

@@ -9,6 +9,8 @@ let categoryChart = null;
 let dailyChart = null;
 let trainingDataset = [];
 let currentImageData = null;
+let currentView = 'main';
+let scanMode = 'single'; // 'single' o 'multi'
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', initApp);
@@ -47,6 +49,9 @@ async function initApp() {
     // Cargar historial y dataset
     loadHistory();
     loadTrainingDataset();
+
+    // Mostrar vista principal por defecto
+    showSection('main');
 
     // Iniciar modo webcam si los modelos están cargados
     if (isModelLoaded && isCocoLoaded) {
@@ -133,7 +138,10 @@ async function initWebcam() {
         canvas.height = webcam.canvas.height;
         canvas.style.display = 'block';
 
-        updateStatus('🎥 Cámara activa - Haz clic en un objeto para clasificarlo', 'success');
+        const statusMessage = scanMode === 'multi'
+            ? '🎥 Cámara activa - Haz clic en un objeto para clasificarlo'
+            : '🎥 Cámara activa - Muestra un objeto para clasificarlo';
+        updateStatus(statusMessage, 'success');
 
         // Reiniciar selección
         selectedObjectIndex = -1;
@@ -160,7 +168,7 @@ async function initWebcam() {
 }
 
 async function predictWebcam() {
-    if (webcam && model && cocoModel && currentMode === 'webcam') {
+    if (webcam && model && currentMode === 'webcam') {
         // Actualizar webcam
         webcam.update();
 
@@ -169,32 +177,46 @@ async function predictWebcam() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(webcam.canvas, 0, 0);
 
-        // Detectar objetos con COCO-SSD
-        const cocoPredictions = await cocoModel.detect(canvas);
+        if (scanMode === 'multi' && cocoModel) {
+            // Modo múltiple: usar COCO-SSD
+            // Detectar objetos con COCO-SSD
+            const cocoPredictions = await cocoModel.detect(canvas);
 
-        // Filtrar objetos relevantes para clasificación de basura
-        detectedObjects = filterRelevantObjects(cocoPredictions);
+            // Filtrar objetos relevantes para clasificación de basura
+            detectedObjects = filterRelevantObjects(cocoPredictions);
 
-        // Dibujar bounding boxes
-        drawBoundingBoxes(ctx, detectedObjects);
+            // Dibujar bounding boxes
+            drawBoundingBoxes(ctx, detectedObjects);
 
-        // Si hay un objeto seleccionado, hacer predicción solo en esa región
-        if (selectedObjectIndex >= 0 && selectedObjectIndex < detectedObjects.length) {
-            const selectedObj = detectedObjects[selectedObjectIndex];
-            const croppedCanvas = cropObjectFromCanvas(canvas, selectedObj);
+            // Si hay un objeto seleccionado, hacer predicción solo en esa región
+            if (selectedObjectIndex >= 0 && selectedObjectIndex < detectedObjects.length) {
+                const selectedObj = detectedObjects[selectedObjectIndex];
+                const croppedCanvas = cropObjectFromCanvas(canvas, selectedObj);
 
-            // Guardar imagen para feedback
-            currentImageData = croppedCanvas.toDataURL('image/jpeg', 0.8);
+                // Guardar imagen para feedback
+                currentImageData = croppedCanvas.toDataURL('image/jpeg', 0.8);
 
-            // Hacer predicción en el objeto seleccionado
-            const predictions = await model.predict(croppedCanvas);
+                // Hacer predicción en el objeto seleccionado
+                const predictions = await model.predict(croppedCanvas);
+                displayPrediction(predictions);
+            } else {
+                // Limpiar imagen actual
+                currentImageData = null;
+                // Mostrar mensaje para seleccionar objeto
+                document.getElementById('prediction').textContent = 'Haz clic en un objeto para clasificarlo';
+                document.getElementById('confidence').textContent = '';
+            }
+        } else if (scanMode === 'single') {
+            // Modo uno por uno: sistema tradicional
+            detectedObjects = [];
+            selectedObjectIndex = -1;
+
+            // Guardar imagen completa para feedback
+            currentImageData = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Hacer predicción en toda la imagen
+            const predictions = await model.predict(canvas);
             displayPrediction(predictions);
-        } else {
-            // Limpiar imagen actual
-            currentImageData = null;
-            // Mostrar mensaje para seleccionar objeto
-            document.getElementById('prediction').textContent = 'Haz clic en un objeto para clasificarlo';
-            document.getElementById('confidence').textContent = '';
         }
 
         // Continuar el loop
@@ -203,6 +225,13 @@ async function predictWebcam() {
 }
 
 function setupEventListeners() {
+    // Menú desplegable
+    const menuToggle = document.getElementById('menu-toggle');
+    menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+    });
+
     // Drag & Drop para imágenes
     const uploadArea = document.querySelector('.upload-area');
 
@@ -235,6 +264,15 @@ function setupEventListeners() {
     // Event listener para selección de objetos en canvas
     const canvas = document.getElementById('webcam-canvas');
     canvas.addEventListener('click', handleCanvasClick);
+
+    // Cerrar menú al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('dropdown-menu');
+        const menuToggle = document.getElementById('menu-toggle');
+        if (!menu.contains(e.target) && !menuToggle.contains(e.target)) {
+            menu.classList.remove('show');
+        }
+    });
 }
 
 function switchMode(mode) {
@@ -462,6 +500,55 @@ function handleCanvasClick(event) {
 
     // Si no se hizo clic en ningún objeto, deseleccionar
     selectedObjectIndex = -1;
+}
+
+// Funciones para navegación
+function toggleMenu() {
+    const menu = document.getElementById('dropdown-menu');
+    menu.classList.toggle('show');
+}
+
+function showSection(sectionName) {
+    // Ocultar todas las vistas
+    document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+    });
+
+    // Mostrar la vista seleccionada
+    const targetView = document.getElementById(sectionName + '-view');
+    if (targetView) {
+        targetView.classList.add('active');
+        currentView = sectionName;
+
+        // Actualizar gráficas si es necesario
+        if (sectionName === 'charts') {
+            setTimeout(() => {
+                updateCharts();
+            }, 100);
+        }
+    }
+
+    // Ocultar menú
+    document.getElementById('dropdown-menu').classList.remove('show');
+}
+
+function setScanMode(mode) {
+    scanMode = mode;
+
+    // Actualizar botones
+    document.getElementById('single-mode-btn').classList.toggle('active', mode === 'single');
+    document.getElementById('multi-mode-btn').classList.toggle('active', mode === 'multi');
+
+    // Reiniciar selección y objetos detectados
+    selectedObjectIndex = -1;
+    detectedObjects = [];
+
+    // Reiniciar webcam si está activa
+    if (webcam && currentMode === 'webcam') {
+        initWebcam();
+    }
+
+    console.log(`Modo de escaneo cambiado a: ${mode}`);
 }
 
 // Funciones para el modal de ayuda
