@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>♻️ Clasificador de Basura IA</title>
+    <title>♻️ Waste Classifier AI</title>
 
     <!-- Librerías CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script>
@@ -42,54 +42,6 @@
             </header>
 
             <div class="card">
-                <div class="instructions">
-                    <h3>📋 Instrucciones:</h3>
-                    <p>1. Elige el modo de escaneo</p>
-                    <p>2. Permite el acceso a la cámara</p>
-                    <p>3. ¡El sistema clasificará automáticamente tu basura!</p>
-                </div>
-
-                <!-- Configuración -->
-                <div class="config-section">
-                    <h3>⚙️ Configuración</h3>
-
-                    <!-- Selector de Modo de Escaneo -->
-                    <div class="config-group">
-                        <h4>🎯 Modo de Escaneo:</h4>
-                        <div class="mode-options">
-                            <button id="single-mode-btn" class="mode-option active" onclick="setScanMode('single')">
-                                🔍 Uno por Uno
-                                <small>Sistema tradicional</small>
-                            </button>
-                            <button id="multi-mode-btn" class="mode-option" onclick="setScanMode('multi')">
-                                🎯 Múltiples Objetos
-                                <small>Con detección automática</small>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Selector de Modo Webcam -->
-                    <div class="config-group">
-                        <h4>📷 Modo Webcam:</h4>
-                        <div class="mode-options">
-                            <button id="continuous-mode-btn" class="mode-option active" onclick="setWebcamMode('continuous')">
-                                🔄 Continua
-                                <small>Escaneo en tiempo real</small>
-                            </button>
-                            <button id="capture-mode-btn" class="mode-option" onclick="setWebcamMode('capture')">
-                                📸 Captura
-                                <small>Tomar foto y analizar</small>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Botón de Captura (solo visible en modo captura) -->
-                    <div id="capture-controls" class="capture-controls" style="display: none;">
-                        <button id="capture-btn" class="capture-btn" onclick="captureAndClassify()">
-                            📸 Capturar y Clasificar
-                        </button>
-                    </div>
-                </div>
 
                 <!-- Selector de Modo -->
                 <div class="mode-selector">
@@ -128,6 +80,41 @@
                 <div class="results">
                     <div id="prediction" class="prediction">Esperando clasificación...</div>
                     <div id="confidence" class="confidence"></div>
+                </div>
+    
+                <!-- Configuración Rápida -->
+                <div class="quick-config">
+                    <div class="config-row">
+                        <div class="config-item">
+                            <label>Modo de Escaneo:</label>
+                            <div class="mode-options">
+                                <button id="single-mode-btn" class="mode-option active" onclick="setScanMode('single')">
+                                    🔍 Uno por Uno
+                                </button>
+                                <button id="multi-mode-btn" class="mode-option" onclick="setScanMode('multi')">
+                                    🎯 Múltiples Objetos
+                                </button>
+                            </div>
+                        </div>
+                        <div class="config-item">
+                            <label>Modo Webcam:</label>
+                            <div class="mode-options">
+                                <button id="continuous-mode-btn" class="mode-option" onclick="setWebcamMode('continuous')">
+                                    🔄 Continua
+                                </button>
+                                <button id="capture-mode-btn" class="mode-option active" onclick="setWebcamMode('capture')">
+                                    📸 Captura
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+    
+                    <!-- Botón de Captura (solo visible en modo captura) -->
+                    <div id="capture-controls" class="capture-controls">
+                        <button id="capture-btn" class="capture-btn" onclick="captureAndClassify()">
+                            📸 Capturar y Clasificar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

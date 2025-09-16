@@ -11,7 +11,7 @@ let trainingDataset = [];
 let currentImageData = null;
 let currentView = 'main';
 let scanMode = 'single'; // 'single' o 'multi'
-let webcamMode = 'continuous'; // 'continuous' o 'capture'
+let webcamMode = 'capture'; // 'continuous' o 'capture'
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', initApp);

@@ -11,6 +11,18 @@ function showSection(sectionName) {
         return;
     }
 
+    // Detener webcam si se sale de la página principal
+    if (currentView === 'main' && sectionName !== 'main') {
+        stopWebcam();
+    }
+
+    // Reiniciar webcam si se vuelve a la página principal
+    if (sectionName === 'main' && currentView !== 'main') {
+        if (isModelLoaded) {
+            initWebcam();
+        }
+    }
+
     // Ocultar vista actual
     const currentViewEl = document.getElementById(currentView + '-view');
     if (currentViewEl) {
@@ -43,6 +55,14 @@ function showSection(sectionName) {
 
     // Ocultar menú
     document.getElementById('dropdown-menu').classList.remove('show');
+}
+
+function stopWebcam() {
+    if (webcam) {
+        webcam.stop();
+        webcam = null;
+        console.log('Webcam detenida');
+    }
 }
 
 function updatePageTitle(sectionName) {

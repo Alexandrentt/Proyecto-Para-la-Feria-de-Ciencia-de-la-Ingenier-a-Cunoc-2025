@@ -48,7 +48,22 @@ const translations = {
             success: '¡Éxito!',
             error: 'Error',
             noData: 'No hay datos disponibles',
-            confirmDelete: '¿Estás seguro de que quieres eliminar esto?'
+            confirmDelete: '¿Estás seguro de que quieres eliminar esto?',
+            waiting: 'Esperando clasificación...',
+            captureAndClassify: 'Capturar y Clasificar',
+            singleObject: 'Uno por Uno',
+            multipleObjects: 'Múltiples Objetos',
+            continuous: 'Continua',
+            capture: 'Captura',
+            clearHistory: 'Limpiar Historial',
+            exportData: 'Exportar Datos',
+            exportDataset: 'Exportar Dataset',
+            clearDataset: 'Limpiar Dataset',
+            totalClassifications: 'Total Clasificaciones',
+            averageConfidence: 'Confianza Promedio',
+            mostCommon: 'Categoría Más Común',
+            imagesSaved: 'Imágenes guardadas',
+            precisionAverage: 'Precisión promedio'
         },
 
         // Ayuda
@@ -106,7 +121,22 @@ const translations = {
             success: 'Success!',
             error: 'Error',
             noData: 'No data available',
-            confirmDelete: 'Are you sure you want to delete this?'
+            confirmDelete: 'Are you sure you want to delete this?',
+            waiting: 'Waiting for classification...',
+            captureAndClassify: 'Capture and Classify',
+            singleObject: 'Single Object',
+            multipleObjects: 'Multiple Objects',
+            continuous: 'Continuous',
+            capture: 'Capture',
+            clearHistory: 'Clear History',
+            exportData: 'Export Data',
+            exportDataset: 'Export Dataset',
+            clearDataset: 'Clear Dataset',
+            totalClassifications: 'Total Classifications',
+            averageConfidence: 'Average Confidence',
+            mostCommon: 'Most Common Category',
+            imagesSaved: 'Images saved',
+            precisionAverage: 'Average precision'
         },
 
         // Help

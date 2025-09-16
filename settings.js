@@ -35,35 +35,6 @@ function createSettingsView() {
                     </div>
                 </div>
 
-                <!-- Modo de Escaneo -->
-                <div class="setting-group">
-                    <h4 data-i18n="scanMode" data-i18n-category="config">Modo de Escaneo</h4>
-                    <div class="setting-options">
-                        <button class="setting-btn ${scanMode === 'single' ? 'active' : ''}"
-                                onclick="setScanMode('single')">
-                            <span data-i18n="singleMode" data-i18n-category="config">Uno por Uno</span>
-                        </button>
-                        <button class="setting-btn ${scanMode === 'multi' ? 'active' : ''}"
-                                onclick="setScanMode('multi')">
-                            <span data-i18n="multiMode" data-i18n-category="config">Múltiples Objetos</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Modo Webcam -->
-                <div class="setting-group">
-                    <h4 data-i18n="webcamMode" data-i18n-category="config">Modo Webcam</h4>
-                    <div class="setting-options">
-                        <button class="setting-btn ${webcamMode === 'continuous' ? 'active' : ''}"
-                                onclick="setWebcamMode('continuous')">
-                            <span data-i18n="continuousMode" data-i18n-category="config">Continuo</span>
-                        </button>
-                        <button class="setting-btn ${webcamMode === 'capture' ? 'active' : ''}"
-                                onclick="setWebcamMode('capture')">
-                            <span data-i18n="captureMode" data-i18n-category="config">Captura</span>
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     `;
