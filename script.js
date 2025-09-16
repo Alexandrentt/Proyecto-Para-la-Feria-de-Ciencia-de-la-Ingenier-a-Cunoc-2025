@@ -7,6 +7,8 @@ let selectedObjectIndex = -1;
 let classificationHistory = [];
 let categoryChart = null;
 let dailyChart = null;
+let trainingDataset = [];
+let currentImageData = null;
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', initApp);
@@ -42,8 +44,9 @@ async function initApp() {
     // Configurar eventos
     setupEventListeners();
 
-    // Cargar historial
+    // Cargar historial y dataset
     loadHistory();
+    loadTrainingDataset();
 
     // Iniciar modo webcam si los modelos están cargados
     if (isModelLoaded && isCocoLoaded) {
@@ -180,10 +183,15 @@ async function predictWebcam() {
             const selectedObj = detectedObjects[selectedObjectIndex];
             const croppedCanvas = cropObjectFromCanvas(canvas, selectedObj);
 
+            // Guardar imagen para feedback
+            currentImageData = croppedCanvas.toDataURL('image/jpeg', 0.8);
+
             // Hacer predicción en el objeto seleccionado
             const predictions = await model.predict(croppedCanvas);
             displayPrediction(predictions);
         } else {
+            // Limpiar imagen actual
+            currentImageData = null;
             // Mostrar mensaje para seleccionar objeto
             document.getElementById('prediction').textContent = 'Haz clic en un objeto para clasificarlo';
             document.getElementById('confidence').textContent = '';
@@ -316,8 +324,15 @@ function displayPrediction(predictions) {
     const label = formatLabel(topPrediction.className);
     const confidence = (topPrediction.probability * 100).toFixed(1);
 
-    // Mostrar resultado
-    document.getElementById('prediction').textContent = label;
+    // Mostrar resultado con botones de feedback
+    const predictionDiv = document.getElementById('prediction');
+    predictionDiv.innerHTML = `
+        <div class="prediction-result">${label}</div>
+        <div class="feedback-buttons">
+            <button class="feedback-btn correct-btn" onclick="provideFeedback(true, '${label}', ${confidence})">✅ Correcto</button>
+            <button class="feedback-btn incorrect-btn" onclick="provideFeedback(false, '${label}', ${confidence})">❌ Incorrecto</button>
+        </div>
+    `;
     document.getElementById('confidence').textContent = `Confianza: ${confidence}%`;
 
     // Guardar en historial
@@ -726,4 +741,125 @@ function updateStatsSummary() {
     };
 
     document.getElementById('most-common').textContent = categoryNames[mostCommon] || mostCommon;
+}
+
+// Funciones para recopilación de datos
+function provideFeedback(isCorrect, predictedLabel, confidence) {
+    if (!currentImageData) {
+        alert('No hay imagen disponible para guardar');
+        return;
+    }
+
+    if (isCorrect) {
+        // Agregar al dataset de entrenamiento
+        const trainingSample = {
+            id: Date.now(),
+            imageData: currentImageData,
+            label: predictedLabel,
+            confidence: confidence,
+            timestamp: new Date().toISOString(),
+            category: getCategoryFromLabel(predictedLabel)
+        };
+
+        trainingDataset.push(trainingSample);
+
+        // Guardar en localStorage
+        localStorage.setItem('trainingDataset', JSON.stringify(trainingDataset));
+
+        // Actualizar estadísticas
+        updateTrainingStats();
+
+        // Mostrar confirmación
+        showFeedbackMessage('✅ Imagen guardada para reentrenamiento', 'success');
+        console.log('Imagen guardada para dataset de entrenamiento');
+    } else {
+        // Solo actualizar historial, no guardar para entrenamiento
+        showFeedbackMessage('❌ Clasificación incorrecta registrada', 'error');
+    }
+
+    // Limpiar imagen actual
+    currentImageData = null;
+
+    // Ocultar botones de feedback después de 2 segundos
+    setTimeout(() => {
+        document.getElementById('prediction').textContent = 'Esperando nueva clasificación...';
+        document.getElementById('confidence').textContent = '';
+    }, 2000);
+}
+
+function showFeedbackMessage(message, type) {
+    const predictionDiv = document.getElementById('prediction');
+    predictionDiv.innerHTML = `<div class="feedback-message ${type}">${message}</div>`;
+}
+
+function loadTrainingDataset() {
+    const saved = localStorage.getItem('trainingDataset');
+    if (saved) {
+        trainingDataset = JSON.parse(saved);
+        console.log(`Cargado dataset de entrenamiento: ${trainingDataset.length} muestras`);
+        updateTrainingStats();
+    }
+}
+
+function exportTrainingDataset() {
+    if (trainingDataset.length === 0) {
+        alert('No hay datos de entrenamiento para exportar');
+        return;
+    }
+
+    // Crear archivo ZIP con imágenes y metadatos
+    const zip = new JSZip();
+    const metadata = [];
+
+    trainingDataset.forEach((sample, index) => {
+        // Agregar imagen al ZIP
+        const imageData = sample.imageData.split(',')[1]; // Remover data URL prefix
+        zip.file(`sample_${index}.jpg`, imageData, {base64: true});
+
+        // Agregar metadatos
+        metadata.push({
+            filename: `sample_${index}.jpg`,
+            label: sample.label,
+            category: sample.category,
+            confidence: sample.confidence,
+            timestamp: sample.timestamp
+        });
+    });
+
+    // Agregar archivo de metadatos
+    zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+
+    // Generar y descargar ZIP
+    zip.generateAsync({type: 'blob'}).then(content => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = `dataset_entrenamiento_${new Date().toISOString().split('T')[0]}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+}
+
+function clearTrainingDataset() {
+    if (confirm('¿Estás seguro de que quieres eliminar todo el dataset de entrenamiento?')) {
+        trainingDataset = [];
+        localStorage.removeItem('trainingDataset');
+        console.log('Dataset de entrenamiento eliminado');
+    }
+}
+
+// Agregar JSZip para crear archivos ZIP
+document.head.insertAdjacentHTML('beforeend', '<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>');
+
+function updateTrainingStats() {
+    // Actualizar número de imágenes
+    document.getElementById('dataset-size').textContent = trainingDataset.length;
+
+    // Calcular precisión promedio
+    if (trainingDataset.length > 0) {
+        const avgAccuracy = trainingDataset.reduce((sum, item) => sum + item.confidence, 0) / trainingDataset.length;
+        document.getElementById('dataset-accuracy').textContent = avgAccuracy.toFixed(1) + '%';
+    } else {
+        document.getElementById('dataset-accuracy').textContent = '0%';
+    }
 }

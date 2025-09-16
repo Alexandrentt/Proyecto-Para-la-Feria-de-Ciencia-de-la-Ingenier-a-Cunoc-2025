@@ -150,8 +150,50 @@ h1 {
     margin-bottom: 10px;
     min-height: 60px;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 10px;
+}
+
+.prediction-result {
+    text-align: center;
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.feedback-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.correct-btn {
+    background: #28a745;
+    color: white;
+}
+
+.correct-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.incorrect-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.incorrect-btn:hover {
+    background: #c82333;
+    transform: translateY(-2px);
 }
 
 .confidence {
@@ -559,5 +601,117 @@ h1 {
 
     .stats-summary {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Estilos para dataset de entrenamiento */
+.training-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+}
+
+.training-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+}
+
+.training-info {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.training-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.training-description {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.training-description p {
+    margin: 0 0 10px 0;
+    color: #666;
+    line-height: 1.5;
+}
+
+.training-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.export-dataset-btn, .clear-dataset-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.export-dataset-btn {
+    background: #17a2b8;
+    color: white;
+}
+
+.export-dataset-btn:hover {
+    background: #138496;
+    transform: translateY(-2px);
+}
+
+.clear-dataset-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.clear-dataset-btn:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+.feedback-message {
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.feedback-message.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.feedback-message.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+@media (max-width: 768px) {
+    .training-info {
+        grid-template-columns: 1fr;
+    }
+
+    .training-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .training-actions {
+        flex-direction: column;
+    }
+
+    .export-dataset-btn, .clear-dataset-btn {
+        width: 100%;
     }
 }

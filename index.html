@@ -107,6 +107,31 @@
                         <div class="stat-label">Categoría Más Común</div>
                     </div>
                 </div>
+    
+                <!-- Dataset de Entrenamiento -->
+                <div class="training-section">
+                    <h3>🧠 Dataset de Reentrenamiento</h3>
+                    <div class="training-info">
+                        <div class="training-stats">
+                            <div class="stat-item">
+                                <div class="stat-number" id="dataset-size">0</div>
+                                <div class="stat-label">Imágenes guardadas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" id="dataset-accuracy">0%</div>
+                                <div class="stat-label">Precisión promedio</div>
+                            </div>
+                        </div>
+                        <div class="training-description">
+                            <p>Las imágenes clasificadas correctamente se guardan automáticamente para mejorar el modelo.</p>
+                            <p>Puedes exportar el dataset completo para reentrenar el modelo en Teachable Machine.</p>
+                        </div>
+                    </div>
+                    <div class="training-actions">
+                        <button id="export-dataset-btn" class="export-dataset-btn" onclick="exportTrainingDataset()">📦 Exportar Dataset</button>
+                        <button id="clear-dataset-btn" class="clear-dataset-btn" onclick="clearTrainingDataset()">🗑️ Limpiar Dataset</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
