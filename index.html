@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>♻️ Clasificador de Basura IA</title>
+
+    <!-- Librerías CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♻️ Clasificador de Basura IA</h1>
+            <p class="subtitle">Identifica automáticamente: Orgánico 🍌 • Reciclable ♻️ • No Reciclable 🚫</p>
+        </header>
+
+        <div class="card">
+            <div class="instructions">
+                <h3>📋 Instrucciones:</h3>
+                <p>1. Asegúrate de tener tu modelo de Teachable Machine en la carpeta <strong>my_model/</strong></p>
+                <p>2. Elige entre usar la webcam o subir una imagen</p>
+                <p>3. ¡El sistema clasificará automáticamente tu basura!</p>
+            </div>
+
+            <!-- Selector de Modo -->
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="switchMode('webcam')">
+                    🎥 Usar Webcam
+                </button>
+                <button class="mode-btn" onclick="switchMode('upload')">
+                    📸 Subir Imagen
+                </button>
+            </div>
+
+            <!-- Sección Webcam -->
+            <div id="webcam-section" class="webcam-container">
+                <div id="status" class="status loading">
+                    <div class="loading-spinner"></div>
+                    <p>Iniciando aplicación...</p>
+                </div>
+                <canvas id="webcam-canvas" style="display: none;"></canvas>
+            </div>
+
+            <!-- Sección Upload -->
+            <div id="upload-section" class="upload-section">
+                <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">📁</div>
+                    <h3>Selecciona o arrastra una imagen</h3>
+                    <p>Formatos: JPG, PNG, GIF</p>
+                </div>
+                <input type="file" id="file-input" accept="image/*">
+                <img id="preview-image" class="preview-image" style="display: none;">
+                <button id="classify-image-btn" class="classify-btn" style="display: none;" onclick="classifyUploadedImage()">
+                    🤖 Clasificar Imagen
+                </button>
+            </div>
+
+            <!-- Resultados -->
+            <div class="results">
+                <div id="prediction" class="prediction">Esperando clasificación...</div>
+                <div id="confidence" class="confidence"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>🌱 Clasificador de Basura con IA • Ayuda al medio ambiente clasificando correctamente</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
