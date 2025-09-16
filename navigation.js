@@ -1,13 +1,19 @@
 // Funcionalidad de navegación
 function toggleMenu() {
     const menu = document.getElementById('dropdown-menu');
-    menu.classList.toggle('show');
+    // Solo toggle en móviles
+    if (window.innerWidth <= 768) {
+        menu.classList.toggle('show');
+    }
 }
 
 function showSection(sectionName) {
     // Si ya estamos en la sección, no hacer nada
     if (currentView === sectionName) {
-        document.getElementById('dropdown-menu').classList.remove('show');
+        // Solo ocultar menú si está en modo móvil
+        if (window.innerWidth <= 768) {
+            document.getElementById('dropdown-menu').classList.remove('show');
+        }
         return;
     }
 
@@ -19,7 +25,9 @@ function showSection(sectionName) {
     // Reiniciar webcam si se vuelve a la página principal
     if (sectionName === 'main' && currentView !== 'main') {
         if (isModelLoaded) {
-            initWebcam();
+            setTimeout(() => {
+                initWebcam();
+            }, 300); // Esperar a que termine la transición
         }
     }
 
@@ -51,10 +59,29 @@ function showSection(sectionName) {
 
         // Actualizar título de la página
         updatePageTitle(sectionName);
+
+        // Actualizar botón activo del menú
+        updateActiveMenuButton(sectionName);
     }
 
-    // Ocultar menú
-    document.getElementById('dropdown-menu').classList.remove('show');
+    // Ocultar menú solo en móviles
+    if (window.innerWidth <= 768) {
+        document.getElementById('dropdown-menu').classList.remove('show');
+    }
+}
+
+function updateActiveMenuButton(sectionName) {
+    // Remover clase active de todos los botones
+    const menuButtons = document.querySelectorAll('.dropdown-menu button');
+    menuButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+
+    // Agregar clase active al botón correspondiente
+    const activeButton = document.querySelector(`.dropdown-menu button[onclick*="${sectionName}"]`);
+    if (activeButton) {
+        activeButton.classList.add('active');
+    }
 }
 
 function stopWebcam() {

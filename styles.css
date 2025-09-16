@@ -187,16 +187,52 @@ body {
     position: absolute;
     top: 100%;
     left: 0;
-    background: white;
+    background: var(--bg-secondary);
     border-radius: 8px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    box-shadow: var(--shadow);
     min-width: 200px;
     margin-top: 5px;
     overflow: hidden;
+    border: 2px solid var(--border-color);
 }
 
 .dropdown-menu.show {
     display: block;
+}
+
+/* Menú desplegado por defecto en escritorio */
+@media (min-width: 769px) {
+    .dropdown-menu {
+        display: block;
+        position: static;
+        box-shadow: none;
+        background: transparent;
+        border: none;
+        margin-top: 0;
+    }
+
+    .dropdown-menu button {
+        display: inline-block;
+        margin: 0 10px;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-menu button:hover {
+        background: var(--light-color);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .dropdown-menu button.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
 }
 
 .dropdown-menu button {

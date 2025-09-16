@@ -11,7 +11,6 @@ const translations = {
             history: 'Historial',
             charts: 'Estadísticas',
             training: 'Dataset',
-            help: 'Ayuda',
             config: 'Configuración'
         },
 
@@ -21,8 +20,8 @@ const translations = {
             history: '📊 Historial de Clasificaciones',
             charts: '📈 Estadísticas',
             training: '🧠 Dataset de Entrenamiento',
-            help: '❓ Centro de Ayuda',
-            config: '⚙️ Configuración'
+            config: '⚙️ Configuración',
+            pageTitle: '♻️ Clasificador de Basura IA'
         },
 
         // Configuración
@@ -63,7 +62,38 @@ const translations = {
             averageConfidence: 'Confianza Promedio',
             mostCommon: 'Categoría Más Común',
             imagesSaved: 'Imágenes guardadas',
-            precisionAverage: 'Precisión promedio'
+            precisionAverage: 'Precisión promedio',
+            useWebcam: 'Usar Webcam',
+            uploadImage: 'Subir Imagen',
+            classifyImage: 'Clasificar Imagen',
+            selectOrDrag: 'Selecciona o arrastra una imagen',
+            formats: 'Formatos: JPG, PNG, GIF',
+            distributionByCategory: 'Distribución por Categoría',
+            classificationsByDay: 'Clasificaciones por Día',
+            noClassifications: 'No hay clasificaciones aún',
+            imagesStored: 'Imágenes guardadas',
+            averageAccuracy: 'Precisión promedio',
+            correctClassification: 'Clasificación correcta registrada',
+            incorrectClassification: 'Clasificación incorrecta registrada',
+            imageSaved: 'Imagen guardada para reentrenamiento',
+            startingApp: 'Iniciando aplicación...',
+            modelLoading: 'Cargando modelo de IA...',
+            modelLoaded: 'Modelo cargado correctamente',
+            objectDetectionLoading: 'Cargando modelo de detección de objetos...',
+            objectDetectionLoaded: 'Modelo de detección cargado correctamente',
+            cameraActive: 'Cámara activa - Haz clic en un objeto para clasificarlo',
+            cameraActiveCapture: 'Cámara activa - Presiona "Capturar" para analizar',
+            clickObject: 'Haz clic en un objeto para clasificarlo',
+            selectImage: 'Selecciona una imagen para clasificar',
+            imageLoaded: 'Imagen cargada - Haz clic en "Clasificar"',
+            classifying: 'Clasificando...',
+            classificationResult: 'Resultado de clasificación',
+            confidence: 'Confianza',
+            organic: 'Orgánico',
+            recyclable: 'Reciclable',
+            nonRecyclable: 'No Reciclable',
+            menu: 'Menú',
+            environmentalImpact: 'Clasificador de Basura con IA • Ayuda al medio ambiente clasificando correctamente'
         },
 
         // Ayuda
@@ -84,7 +114,6 @@ const translations = {
             history: 'History',
             charts: 'Statistics',
             training: 'Dataset',
-            help: 'Help',
             config: 'Settings'
         },
 
@@ -94,8 +123,8 @@ const translations = {
             history: '📊 Classification History',
             charts: '📈 Statistics',
             training: '🧠 Training Dataset',
-            help: '❓ Help Center',
-            config: '⚙️ Settings'
+            config: '⚙️ Settings',
+            pageTitle: '♻️ Waste Classifier AI'
         },
 
         // Settings
@@ -136,7 +165,38 @@ const translations = {
             averageConfidence: 'Average Confidence',
             mostCommon: 'Most Common Category',
             imagesSaved: 'Images saved',
-            precisionAverage: 'Average precision'
+            precisionAverage: 'Average precision',
+            useWebcam: 'Use Webcam',
+            uploadImage: 'Upload Image',
+            classifyImage: 'Classify Image',
+            selectOrDrag: 'Select or drag an image',
+            formats: 'Formats: JPG, PNG, GIF',
+            distributionByCategory: 'Distribution by Category',
+            classificationsByDay: 'Classifications by Day',
+            noClassifications: 'No classifications yet',
+            imagesStored: 'Images stored',
+            averageAccuracy: 'Average accuracy',
+            correctClassification: 'Correct classification recorded',
+            incorrectClassification: 'Incorrect classification recorded',
+            imageSaved: 'Image saved for retraining',
+            startingApp: 'Starting application...',
+            modelLoading: 'Loading AI model...',
+            modelLoaded: 'Model loaded successfully',
+            objectDetectionLoading: 'Loading object detection model...',
+            objectDetectionLoaded: 'Object detection model loaded successfully',
+            cameraActive: 'Camera active - Click on an object to classify it',
+            cameraActiveCapture: 'Camera active - Press "Capture" to analyze',
+            clickObject: 'Click on an object to classify it',
+            selectImage: 'Select an image to classify',
+            imageLoaded: 'Image loaded - Click "Classify"',
+            classifying: 'Classifying...',
+            classificationResult: 'Classification result',
+            confidence: 'Confidence',
+            organic: 'Organic',
+            recyclable: 'Recyclable',
+            nonRecyclable: 'Non-Recyclable',
+            menu: 'Menu',
+            environmentalImpact: 'Waste Classifier with AI • Help the environment by classifying correctly'
         },
 
         // Help
@@ -173,6 +233,9 @@ function getText(key, category = null) {
 }
 
 function updateLanguage() {
+    // Actualizar título del documento
+    document.title = getText('pageTitle', 'titles');
+
     // Actualizar todos los elementos con data-i18n
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
