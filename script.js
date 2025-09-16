@@ -5,6 +5,8 @@ let isModelLoaded = false, isCocoLoaded = false;
 let detectedObjects = [];
 let selectedObjectIndex = -1;
 let classificationHistory = [];
+let categoryChart = null;
+let dailyChart = null;
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', initApp);
@@ -498,6 +500,7 @@ function saveToHistory(label, confidence, originalClass) {
 
     // Actualizar display
     updateHistoryDisplay();
+    updateCharts();
 }
 
 function loadHistory() {
@@ -530,6 +533,9 @@ function updateHistoryDisplay() {
     }).join('');
 
     historyList.innerHTML = historyHTML;
+
+    // Actualizar gráficas
+    updateCharts();
 }
 
 function clearHistory() {
@@ -562,4 +568,162 @@ function getCategoryFromLabel(label) {
     if (label.includes('♻️')) return 'recyclable';
     if (label.includes('🚫')) return 'non-recyclable';
     return 'unknown';
+}
+
+// Funciones para gráficas
+function updateCharts() {
+    if (typeof Chart === 'undefined') {
+        console.warn('Chart.js no está cargado');
+        return;
+    }
+
+    updateCategoryChart();
+    updateDailyChart();
+    updateStatsSummary();
+}
+
+function updateCategoryChart() {
+    const ctx = document.getElementById('categoryChart');
+    if (!ctx) return;
+
+    // Contar clasificaciones por categoría
+    const categoryCounts = {
+        '🍌 Orgánico': 0,
+        '♻️ Reciclable': 0,
+        '🚫 No Reciclable': 0
+    };
+
+    classificationHistory.forEach(item => {
+        if (item.label.includes('🍌')) categoryCounts['🍌 Orgánico']++;
+        else if (item.label.includes('♻️')) categoryCounts['♻️ Reciclable']++;
+        else if (item.label.includes('🚫')) categoryCounts['🚫 No Reciclable']++;
+    });
+
+    const data = {
+        labels: Object.keys(categoryCounts),
+        datasets: [{
+            data: Object.values(categoryCounts),
+            backgroundColor: [
+                '#28a745', // Verde para orgánico
+                '#17a2b8', // Azul para reciclable
+                '#dc3545'  // Rojo para no reciclable
+            ],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    };
+
+    if (categoryChart) {
+        categoryChart.data = data;
+        categoryChart.update();
+    } else {
+        categoryChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+}
+
+function updateDailyChart() {
+    const ctx = document.getElementById('dailyChart');
+    if (!ctx) return;
+
+    // Contar clasificaciones por día (últimos 7 días)
+    const dailyCounts = {};
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateKey = date.toISOString().split('T')[0];
+        dailyCounts[dateKey] = 0;
+    }
+
+    classificationHistory.forEach(item => {
+        const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
+        if (dailyCounts.hasOwnProperty(itemDate)) {
+            dailyCounts[itemDate]++;
+        }
+    });
+
+    const data = {
+        labels: Object.keys(dailyCounts).map(date => {
+            const d = new Date(date);
+            return d.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
+        }),
+        datasets: [{
+            label: 'Clasificaciones',
+            data: Object.values(dailyCounts),
+            backgroundColor: 'rgba(0, 123, 255, 0.5)',
+            borderColor: 'rgba(0, 123, 255, 1)',
+            borderWidth: 2,
+            fill: true
+        }]
+    };
+
+    if (dailyChart) {
+        dailyChart.data = data;
+        dailyChart.update();
+    } else {
+        dailyChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+}
+
+function updateStatsSummary() {
+    if (classificationHistory.length === 0) {
+        document.getElementById('total-classifications').textContent = '0';
+        document.getElementById('avg-confidence').textContent = '0%';
+        document.getElementById('most-common').textContent = '-';
+        return;
+    }
+
+    // Total de clasificaciones
+    document.getElementById('total-classifications').textContent = classificationHistory.length;
+
+    // Confianza promedio
+    const avgConfidence = classificationHistory.reduce((sum, item) => sum + item.confidence, 0) / classificationHistory.length;
+    document.getElementById('avg-confidence').textContent = avgConfidence.toFixed(1) + '%';
+
+    // Categoría más común
+    const categoryCounts = {};
+    classificationHistory.forEach(item => {
+        const category = getCategoryFromLabel(item.label);
+        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+
+    const mostCommon = Object.entries(categoryCounts).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    const categoryNames = {
+        'organic': '🍌 Orgánico',
+        'recyclable': '♻️ Reciclable',
+        'non-recyclable': '🚫 No Reciclable'
+    };
+
+    document.getElementById('most-common').textContent = categoryNames[mostCommon] || mostCommon;
 }
