@@ -54,8 +54,8 @@ async function initApp() {
     // Mostrar vista principal por defecto
     showSection('main');
 
-    // Iniciar modo webcam si los modelos están cargados
-    if (isModelLoaded && isObjectDetectorLoaded) {
+    // Iniciar modo webcam si el modelo de clasificación está cargado
+    if (isModelLoaded) {
         await initWebcam();
     }
 }
@@ -93,29 +93,16 @@ async function loadObjectDetector() {
     try {
         updateStatus('📦 Cargando modelo de detección de objetos...', 'loading');
 
-        // Verificar que la librería esté disponible
-        if (typeof FilesetResolver === 'undefined') {
-            throw new Error('MediaPipe Tasks Vision not loaded. Using fallback mode.');
-        }
+        // Cargar modelo SSD MobileNet v2 de TensorFlow Hub
+        objectDetector = await tf.loadGraphModel('https://tfhub.dev/tensorflow/tfjs-model/ssd_mobilenet_v2/1/default/1/model.json');
 
-        // Cargar modelo MediaPipe Object Detector
-        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
-        objectDetector = await ObjectDetector.createFromOptions(vision, {
-            baseOptions: {
-                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
-                delegate: "GPU"
-            },
-            scoreThreshold: 0.5,
-            runningMode: "IMAGE"
-        });
-
-        console.log('✅ Modelo MediaPipe Object Detector cargado:', objectDetector);
+        console.log('✅ Modelo TF Hub Object Detector cargado:', objectDetector);
 
         isObjectDetectorLoaded = true;
         updateStatus('✅ Modelo de detección cargado correctamente', 'success');
 
     } catch (error) {
-        console.error('❌ Error cargando MediaPipe Object Detector:', error);
+        console.error('❌ Error cargando TF Hub Object Detector:', error);
         console.log('🔄 Continuando sin detección de objetos múltiples');
 
         // Fallback: continuar sin Object Detector
@@ -138,11 +125,7 @@ async function initWebcam() {
         return;
     }
 
-    // Solo requerir Object Detector si está en modo multi
-    if (scanMode === 'multi' && !isObjectDetectorLoaded) {
-        updateStatus('❌ Object Detector no cargado para modo múltiple', 'error');
-        return;
-    }
+    // Nota: Object Detector se requiere solo para modo multi, pero permitimos iniciar webcam
 
     try {
         updateStatus('🎥 Iniciando cámara...', 'loading');
@@ -451,21 +434,45 @@ function updateStatus(message, type) {
 
 // Funciones para detección multiobjeto
 function filterRelevantObjects(predictions) {
-    // Objetos que podrían ser basura o reciclables
+    // Índices de COCO dataset para objetos relevantes (basura/reciclables)
     const relevantClasses = [
-        'bottle', 'cup', 'bowl', 'apple', 'banana', 'orange', 'carrot',
-        'book', 'cell phone', 'remote', 'keyboard', 'mouse', 'laptop',
-        'paper', 'cardboard', 'plastic', 'can', 'box'
+        39, // bottle
+        41, // cup
+        45, // bowl
+        47, // apple
+        48, // sandwich
+        49, // orange
+        51, // carrot
+        65, // remote
+        67, // cell phone
+        70, // toaster
+        72, // laptop
+        73, // mouse
+        74, // remote
+        76, // keyboard
+        84, // book
+        85, // clock
+        86, // vase
+        87, // scissors
+        89, // toothbrush
+        90  // hair drier
     ];
 
     return predictions.filter(pred =>
-        pred.score > 0.5 && relevantClasses.some(cls =>
-            pred.class.toLowerCase().includes(cls.toLowerCase())
-        )
+        pred.score > 0.5 && relevantClasses.includes(parseInt(pred.class))
     );
 }
 
 function drawBoundingBoxes(ctx, objects) {
+    // Mapeo de índices COCO a nombres
+    const cocoClassNames = {
+        39: 'bottle', 41: 'cup', 45: 'bowl', 47: 'apple', 48: 'sandwich',
+        49: 'orange', 51: 'carrot', 65: 'remote', 67: 'cell phone',
+        70: 'toaster', 72: 'laptop', 73: 'mouse', 74: 'remote',
+        76: 'keyboard', 84: 'book', 85: 'clock', 86: 'vase',
+        87: 'scissors', 89: 'toothbrush', 90: 'hair drier'
+    };
+
     objects.forEach((obj, index) => {
         const [x, y, width, height] = obj.bbox;
 
@@ -482,7 +489,8 @@ function drawBoundingBoxes(ctx, objects) {
         // Dibujar etiqueta
         ctx.fillStyle = '#ffffff';
         ctx.font = '14px Arial';
-        const label = `${obj.class} ${(obj.score * 100).toFixed(1)}%`;
+        const className = cocoClassNames[parseInt(obj.class)] || obj.class;
+        const label = `${className} ${(obj.score * 100).toFixed(1)}%`;
         const textWidth = ctx.measureText(label).width;
 
         ctx.fillRect(x, y - 25, textWidth + 10, 20);
@@ -679,20 +687,39 @@ async function captureAndClassify() {
 
         // Procesar según el modo de escaneo
         if (scanMode === 'multi' && objectDetector) {
-            // Convertir canvas a imagen
-            const img = new Image();
-            img.src = canvas.toDataURL();
-            await new Promise(resolve => img.onload = resolve);
+            const imgTensor = tf.browser.fromPixels(canvas);
+            const resized = tf.image.resizeBilinear(imgTensor, [320, 320]);
+            const normalized = resized.div(255.0);
+            const batched = normalized.expandDims(0);
 
-            // Detectar objetos con MediaPipe
-            const detections = await objectDetector.detect(img);
-            const predictions = detections.map(d => ({
-                class: d.categories[0].categoryName,
-                score: d.categories[0].score,
-                bbox: [d.boundingBox.originX, d.boundingBox.originY, d.boundingBox.width, d.boundingBox.height]
-            }));
+            const result = await objectDetector.executeAsync(batched);
+            const boxes = result[0].dataSync();
+            const scores = result[1].dataSync();
+            const classes = result[2].dataSync();
+            const numDetections = Math.floor(result[3].dataSync()[0]);
+
+            const predictions = [];
+            for (let i = 0; i < numDetections; i++) {
+                if (scores[i] > 0.5) {
+                    predictions.push({
+                        class: classes[i].toString(),
+                        score: scores[i],
+                        bbox: [
+                            boxes[i * 4] * canvas.width,
+                            boxes[i * 4 + 1] * canvas.height,
+                            boxes[i * 4 + 2] * canvas.width,
+                            boxes[i * 4 + 3] * canvas.height
+                        ]
+                    });
+                }
+            }
 
             detectedObjects = filterRelevantObjects(predictions);
+
+            imgTensor.dispose();
+            resized.dispose();
+            normalized.dispose();
+            batched.dispose();
 
             if (detectedObjects.length > 0) {
                 // Usar el primer objeto detectado
