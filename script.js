@@ -523,20 +523,28 @@ function toggleMenu() {
 }
 
 function showSection(sectionName) {
-    // Ocultar todas las vistas con animación
-    document.querySelectorAll('.view').forEach(view => {
-        view.classList.remove('active');
-        view.style.display = 'none';
-    });
+    // Si ya estamos en la sección, no hacer nada
+    if (currentView === sectionName) {
+        document.getElementById('dropdown-menu').classList.remove('show');
+        return;
+    }
 
-    // Mostrar la vista seleccionada con animación
+    // Ocultar vista actual
+    const currentViewEl = document.getElementById(currentView + '-view');
+    if (currentViewEl) {
+        currentViewEl.classList.remove('active');
+        setTimeout(() => {
+            currentViewEl.style.display = 'none';
+        }, 300); // Esperar a que termine la animación
+    }
+
+    // Mostrar nueva vista
     const targetView = document.getElementById(sectionName + '-view');
     if (targetView) {
         targetView.style.display = 'block';
-        // Pequeño delay para permitir que el display se aplique antes de la animación
         setTimeout(() => {
             targetView.classList.add('active');
-        }, 10);
+        }, 50);
 
         currentView = sectionName;
 
@@ -544,7 +552,7 @@ function showSection(sectionName) {
         if (sectionName === 'charts') {
             setTimeout(() => {
                 updateCharts();
-            }, 200);
+            }, 350);
         }
 
         // Actualizar título de la página
