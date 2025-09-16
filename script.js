@@ -31,7 +31,7 @@ async function initApp() {
         return;
     }
 
-    if (typeof FilesetResolver === 'undefined') {
+    if (typeof window.Vision === 'undefined') {
         updateStatus('❌ MediaPipe Tasks Vision no cargado', 'error');
         return;
     }
@@ -94,12 +94,13 @@ async function loadObjectDetector() {
         updateStatus('📦 Cargando modelo de detección de objetos...', 'loading');
 
         // Verificar que la librería esté disponible
-        if (typeof FilesetResolver === 'undefined') {
+        if (typeof window.Vision === 'undefined') {
             throw new Error('MediaPipe Tasks Vision not loaded. Using fallback mode.');
         }
 
         // Cargar modelo MediaPipe Object Detector
-        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+        const { FilesetResolver, ObjectDetector } = window.Vision;
+        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
         objectDetector = await ObjectDetector.createFromOptions(vision, {
             baseOptions: {
                 modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
