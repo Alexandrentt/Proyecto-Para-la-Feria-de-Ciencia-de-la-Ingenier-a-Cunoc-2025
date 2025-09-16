@@ -23,15 +23,15 @@ function createSettingsView() {
                 <!-- Tema -->
                 <div class="setting-group">
                     <h4 data-i18n="theme" data-i18n-category="config">Tema</h4>
-                    <div class="setting-options">
-                        <button class="setting-btn ${currentTheme === 'light' ? 'active' : ''}"
-                                onclick="changeTheme('light')">
-                            <span data-i18n="light" data-i18n-category="config">Claro</span>
-                        </button>
-                        <button class="setting-btn ${currentTheme === 'dark' ? 'active' : ''}"
-                                onclick="changeTheme('dark')">
-                            <span data-i18n="dark" data-i18n-category="config">Oscuro</span>
-                        </button>
+                    <div class="theme-options">
+                        <div class="theme-option">
+                            <span class="theme-label" data-i18n="light" data-i18n-category="config">Claro</span>
+                            <label class="theme-switch">
+                                <input type="checkbox" ${currentTheme === 'dark' ? 'checked' : ''} onchange="toggleThemeSwitch()">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="theme-label" data-i18n="dark" data-i18n-category="config">Oscuro</span>
+                        </div>
                     </div>
                 </div>
 
@@ -79,8 +79,22 @@ function changeLanguage(lang) {
 
 function changeTheme(theme) {
     setTheme(theme);
+    // Actualizar switch de tema
+    updateThemeSwitch();
     // Actualizar botones de configuración
     updateSettingsButtons();
+}
+
+function toggleThemeSwitch() {
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    changeTheme(newTheme);
+}
+
+function updateThemeSwitch() {
+    const switchInput = document.querySelector('.theme-switch input');
+    if (switchInput) {
+        switchInput.checked = currentTheme === 'dark';
+    }
 }
 
 function updateSettingsButtons() {
@@ -89,6 +103,8 @@ function updateSettingsButtons() {
     if (configView) {
         configView.innerHTML = createSettingsView();
     }
+    // Actualizar switch de tema
+    updateThemeSwitch();
 }
 
 // Agregar vista de configuración al cargar
