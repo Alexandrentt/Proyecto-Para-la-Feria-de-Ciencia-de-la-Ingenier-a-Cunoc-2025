@@ -1,3 +1,85 @@
+/* CSS Variables para temas */
+:root {
+    /* Tema Claro */
+    --primary-color: #19381f;
+    --secondary-color: #4c934c;
+    --success-color: #53a548;
+    --danger-color: #dc3545;
+    --warning-color: #eee82c;
+    --info-color: #17a2b8;
+    --light-color: #91cb3e;
+    --dark-color: #19381f;
+    --white: #ffffff;
+    --gray-100: #f8f9fa;
+    --gray-200: #e9ecef;
+    --gray-300: #dee2e6;
+    --gray-400: #ced4da;
+    --gray-500: #adb5bd;
+    --gray-600: #6c757d;
+    --gray-700: #495057;
+    --gray-800: #343a40;
+    --gray-900: #212529;
+    --black: #000000;
+
+    /* Fondos y superficies */
+    --bg-primary: linear-gradient(135deg, #91cb3e 0%, #53a548 50%, #4c934c 100%);
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f8f9fa;
+    --bg-card: #ffffff;
+    --bg-modal: rgba(0, 0, 0, 0.8);
+
+    /* Textos */
+    --text-primary: #19381f;
+    --text-secondary: #495057;
+    --text-light: #ffffff;
+    --text-muted: #6c757d;
+
+    /* Bordes y sombras */
+    --border-color: #dee2e6;
+    --shadow: 0 2px 8px rgba(0,0,0,0.1);
+    --shadow-hover: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Tema Oscuro */
+[data-theme="dark"] {
+    --primary-color: #333333;
+    --secondary-color: #666666;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #444444;
+    --dark-color: #222222;
+    --white: #ffffff;
+    --gray-100: #333333;
+    --gray-200: #444444;
+    --gray-300: #555555;
+    --gray-400: #666666;
+    --gray-500: #777777;
+    --gray-600: #888888;
+    --gray-700: #999999;
+    --gray-800: #aaaaaa;
+    --gray-900: #bbbbbb;
+    --black: #cccccc;
+
+    /* Fondos y superficies */
+    --bg-primary: linear-gradient(135deg, #222222 0%, #333333 50%, #444444 100%);
+    --bg-secondary: #333333;
+    --bg-tertiary: #444444;
+    --bg-card: #333333;
+    --bg-modal: rgba(0, 0, 0, 0.9);
+
+    /* Textos */
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --text-light: #ffffff;
+    --text-muted: #888888;
+
+    /* Bordes y sombras */
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-hover: 0 5px 15px rgba(0,0,0,0.4);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,11 +88,12 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--bg-primary);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    color: #333;
+    color: var(--text-primary);
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {

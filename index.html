@@ -11,6 +11,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Archivos de configuración y funcionalidades -->
+    <script src="config.js"></script>
+    <script src="navigation.js"></script>
+    <script src="help.js"></script>
+    <script src="settings.js"></script>
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,10 +25,12 @@
         <div class="menu-container">
             <button id="menu-toggle" class="menu-toggle">☰ Menú</button>
             <div id="dropdown-menu" class="dropdown-menu">
-                <button onclick="showSection('history')">📊 Historial</button>
-                <button onclick="showSection('charts')">📈 Estadísticas</button>
-                <button onclick="showSection('training')">🧠 Dataset</button>
-                <button onclick="showSection('main')">🏠 Principal</button>
+                <button onclick="showSection('main')" data-i18n="main" data-i18n-category="menu">🏠 Principal</button>
+                <button onclick="showSection('history')" data-i18n="history" data-i18n-category="menu">📊 Historial</button>
+                <button onclick="showSection('charts')" data-i18n="charts" data-i18n-category="menu">📈 Estadísticas</button>
+                <button onclick="showSection('training')" data-i18n="training" data-i18n-category="menu">🧠 Dataset</button>
+                <button onclick="showSection('config')" data-i18n="config" data-i18n-category="menu">⚙️ Configuración</button>
+                <button onclick="showSection('help')" data-i18n="help" data-i18n-category="menu">❓ Ayuda</button>
             </div>
         </div>
 
@@ -176,7 +184,7 @@
         <!-- Vista de Dataset -->
         <div id="training-view" class="view">
             <header>
-                <h1>🧠 Dataset de Reentrenamiento</h1>
+                <h1 data-i18n="training" data-i18n-category="titles">🧠 Dataset de Reentrenamiento</h1>
             </header>
             <div class="card">
                 <div class="training-info">
@@ -201,124 +209,69 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="footer">
-        <p>🌱 Clasificador de Basura con IA • Ayuda al medio ambiente clasificando correctamente</p>
-    </div>
+        <!-- Vista de Configuración -->
+        <div id="config-view" class="view">
+            <header>
+                <h1 data-i18n="config" data-i18n-category="titles">⚙️ Configuración</h1>
+            </header>
+            <!-- El contenido se genera dinámicamente por settings.js -->
+        </div>
 
-    <!-- Botón de ayuda en esquina inferior derecha -->
-    <button id="help-btn" class="help-btn-fixed" onclick="showHelp()">❓</button>
+        <!-- Vista de Ayuda -->
+        <div id="help-view" class="view">
+            <header>
+                <h1 data-i18n="help" data-i18n-category="titles">❓ Centro de Ayuda</h1>
+            </header>
+            <div class="card">
+                <div class="help-content">
+                    <h3 data-i18n="webcam" data-i18n-category="help">🎯 ¿Cómo funciona?</h3>
+                    <p>Esta aplicación utiliza Inteligencia Artificial para clasificar objetos en tres categorías:</p>
+                    <ul>
+                        <li><strong>🍌 Orgánico:</strong> Basura que se descompone naturalmente</li>
+                        <li><strong>♻️ Reciclable:</strong> Materiales que pueden reutilizarse</li>
+                        <li><strong>🚫 No Reciclable:</strong> Basura que va a vertedero</li>
+                    </ul>
 
-        <div class="card">
-            <div class="instructions">
-                <h3>📋 Instrucciones:</h3>
-                <p>1. Asegúrate de tener tu modelo de Teachable Machine en la carpeta <strong>my_model/</strong></p>
-                <p>2. Elige entre usar la webcam o subir una imagen</p>
-                <p>3. ¡El sistema clasificará automáticamente tu basura!</p>
-            </div>
+                    <h3 data-i18n="webcam" data-i18n-category="help">📱 Modo Webcam</h3>
+                    <p>1. Haz clic en "🎥 Usar Webcam"</p>
+                    <p>2. Permite el acceso a la cámara</p>
+                    <p>3. La IA detectará objetos automáticamente</p>
+                    <p>4. <strong>Haz clic en un objeto</strong> para clasificarlo</p>
+                    <p>5. Verás el resultado con el nivel de confianza</p>
 
-            <!-- Selector de Modo -->
-            <div class="mode-selector">
-                <button class="mode-btn active" onclick="switchMode('webcam')">
-                    🎥 Usar Webcam
-                </button>
-                <button class="mode-btn" onclick="switchMode('upload')">
-                    📸 Subir Imagen
-                </button>
-            </div>
+                    <h3 data-i18n="upload" data-i18n-category="help">📸 Subir Imagen</h3>
+                    <p>1. Haz clic en "📸 Subir Imagen"</p>
+                    <p>2. Selecciona o arrastra una imagen</p>
+                    <p>3. Haz clic en "🤖 Clasificar Imagen"</p>
 
-            <!-- Sección Webcam -->
-            <div id="webcam-section" class="webcam-container">
-                <div id="status" class="status loading">
-                    <div class="loading-spinner"></div>
-                    <p>Iniciando aplicación...</p>
-                </div>
-                <canvas id="webcam-canvas" style="display: none;"></canvas>
-            </div>
+                    <h3 data-i18n="multiObject" data-i18n-category="help">🎯 Detección Múltiple</h3>
+                    <p>La aplicación puede detectar múltiples objetos en la imagen:</p>
+                    <ul>
+                        <li>Verás rectángulos verdes alrededor de los objetos detectados</li>
+                        <li>Cada objeto tiene un número en la esquina</li>
+                        <li>Haz clic en el objeto que quieres clasificar</li>
+                        <li>El rectángulo se volverá rojo cuando esté seleccionado</li>
+                    </ul>
 
-            <!-- Sección Upload -->
-            <div id="upload-section" class="upload-section">
-                <div class="upload-area" onclick="document.getElementById('file-input').click()">
-                    <div class="upload-icon">📁</div>
-                    <h3>Selecciona o arrastra una imagen</h3>
-                    <p>Formatos: JPG, PNG, GIF</p>
-                </div>
-                <input type="file" id="file-input" accept="image/*">
-                <img id="preview-image" class="preview-image" style="display: none;">
-                <button id="classify-image-btn" class="classify-btn" style="display: none;" onclick="classifyUploadedImage()">
-                    🤖 Clasificar Imagen
-                </button>
-            </div>
+                    <h3 data-i18n="tips" data-i18n-category="help">📊 Consejos para mejores resultados</h3>
+                    <ul>
+                        <li>Asegúrate de que el objeto esté bien iluminado</li>
+                        <li>Mantén la cámara estable</li>
+                        <li>Evita fondos complejos</li>
+                        <li>Los objetos deben ocupar al menos 1/4 de la imagen</li>
+                    </ul>
 
-            <!-- Resultados -->
-            <div class="results">
-                <div id="prediction" class="prediction">Esperando clasificación...</div>
-                <div id="confidence" class="confidence"></div>
-            </div>
+                    <h3 data-i18n="troubleshooting" data-i18n-category="help">🔧 Solución de problemas</h3>
+                    <ul>
+                        <li><strong>"Modelo no cargado":</strong> Espera a que termine la carga inicial</li>
+                        <li><strong>"Permisos denegados":</strong> Permite el acceso a la cámara</li>
+                        <li><strong>"No se detectan objetos":</strong> Intenta con mejor iluminación</li>
+                    </ul>
 
-            <!-- Historial de Clasificaciones -->
-            <div class="history-section">
-                <h3>📊 Historial de Clasificaciones</h3>
-                <div id="history-list" class="history-list">
-                    <p class="no-history">No hay clasificaciones aún</p>
-                </div>
-                <div class="history-actions">
-                    <button id="clear-history-btn" class="clear-btn" onclick="clearHistory()">🗑️ Limpiar Historial</button>
-                    <button id="export-history-btn" class="export-btn" onclick="exportHistory()">📤 Exportar Datos</button>
-                </div>
-            </div>
-
-            <!-- Gráficas de Estadísticas -->
-            <div class="charts-section">
-                <h3>📈 Estadísticas</h3>
-                <div class="charts-container">
-                    <div class="chart-wrapper">
-                        <h4>Distribución por Categoría</h4>
-                        <canvas id="categoryChart" width="300" height="200"></canvas>
-                    </div>
-                    <div class="chart-wrapper">
-                        <h4>Clasificaciones por Día</h4>
-                        <canvas id="dailyChart" width="300" height="200"></canvas>
-                    </div>
-                </div>
-                <div class="stats-summary">
-                    <div class="stat-item">
-                        <div class="stat-number" id="total-classifications">0</div>
-                        <div class="stat-label">Total Clasificaciones</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="avg-confidence">0%</div>
-                        <div class="stat-label">Confianza Promedio</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number" id="most-common">-</div>
-                        <div class="stat-label">Categoría Más Común</div>
-                    </div>
-                </div>
-    
-                <!-- Dataset de Entrenamiento -->
-                <div class="training-section">
-                    <h3>🧠 Dataset de Reentrenamiento</h3>
-                    <div class="training-info">
-                        <div class="training-stats">
-                            <div class="stat-item">
-                                <div class="stat-number" id="dataset-size">0</div>
-                                <div class="stat-label">Imágenes guardadas</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number" id="dataset-accuracy">0%</div>
-                                <div class="stat-label">Precisión promedio</div>
-                            </div>
-                        </div>
-                        <div class="training-description">
-                            <p>Las imágenes clasificadas correctamente se guardan automáticamente para mejorar el modelo.</p>
-                            <p>Puedes exportar el dataset completo para reentrenar el modelo en Teachable Machine.</p>
-                        </div>
-                    </div>
-                    <div class="training-actions">
-                        <button id="export-dataset-btn" class="export-dataset-btn" onclick="exportTrainingDataset()">📦 Exportar Dataset</button>
-                        <button id="clear-dataset-btn" class="clear-dataset-btn" onclick="clearTrainingDataset()">🗑️ Limpiar Dataset</button>
+                    <div class="help-highlight">
+                        <h3>🌱 Impacto Ambiental</h3>
+                        <p>Clasificar correctamente la basura reduce la contaminación y ayuda a reciclar más materiales. ¡Cada clasificación cuenta!</p>
                     </div>
                 </div>
             </div>
@@ -327,65 +280,6 @@
 
     <div class="footer">
         <p>🌱 Clasificador de Basura con IA • Ayuda al medio ambiente clasificando correctamente</p>
-    </div>
-
-    <!-- Modal de Ayuda -->
-    <div id="help-modal" class="help-modal">
-        <div class="help-content">
-            <button class="close-btn" onclick="hideHelp()">×</button>
-            <h2>❓ Centro de Ayuda</h2>
-
-            <div class="help-highlight">
-                <h3>🎯 ¿Cómo funciona?</h3>
-                <p>Esta aplicación utiliza Inteligencia Artificial para clasificar objetos en tres categorías:</p>
-                <ul>
-                    <li><strong>🍌 Orgánico:</strong> Basura que se descompone naturalmente</li>
-                    <li><strong>♻️ Reciclable:</strong> Materiales que pueden reutilizarse</li>
-                    <li><strong>🚫 No Reciclable:</strong> Basura que va a vertedero</li>
-                </ul>
-            </div>
-
-            <h3>📱 Modo Webcam</h3>
-            <p>1. Haz clic en "🎥 Usar Webcam"</p>
-            <p>2. Permite el acceso a la cámara</p>
-            <p>3. La IA detectará objetos automáticamente</p>
-            <p>4. <strong>Haz clic en un objeto</strong> para clasificarlo</p>
-            <p>5. Verás el resultado con el nivel de confianza</p>
-
-            <h3>📸 Subir Imagen</h3>
-            <p>1. Haz clic en "📸 Subir Imagen"</p>
-            <p>2. Selecciona o arrastra una imagen</p>
-            <p>3. Haz clic en "🤖 Clasificar Imagen"</p>
-
-            <h3>🎯 Detección Multiobjeto</h3>
-            <p>La aplicación puede detectar múltiples objetos en la imagen:</p>
-            <ul>
-                    <li>Verás rectángulos verdes alrededor de los objetos detectados</li>
-                    <li>Cada objeto tiene un número en la esquina</li>
-                    <li>Haz clic en el objeto que quieres clasificar</li>
-                    <li>El rectángulo se volverá rojo cuando esté seleccionado</li>
-                </ul>
-
-            <h3>📊 Consejos para mejores resultados</h3>
-            <ul>
-                <li>Asegúrate de que el objeto esté bien iluminado</li>
-                <li>Mantén la cámara estable</li>
-                <li>Evita fondos complejos</li>
-                <li>Los objetos deben ocupar al menos 1/4 de la imagen</li>
-            </ul>
-
-            <h3>🔧 Solución de problemas</h3>
-            <ul>
-                <li><strong>"Modelo no cargado":</strong> Espera a que termine la carga inicial</li>
-                <li><strong>"Permisos denegados":</strong> Permite el acceso a la cámara</li>
-                <li><strong>"No se detectan objetos":</strong> Intenta con mejor iluminación</li>
-            </ul>
-
-            <div class="help-highlight">
-                <h3>🌱 Impacto Ambiental</h3>
-                <p>Clasificar correctamente la basura reduce la contaminación y ayuda a reciclar más materiales. ¡Cada clasificación cuenta!</p>
-            </div>
-        </div>
     </div>
 
     <script src="script.js"></script>
