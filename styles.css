@@ -23,6 +23,7 @@ header {
     text-align: center;
     color: white;
     margin-bottom: 30px;
+    position: relative;
 }
 
 h1 {
@@ -251,4 +252,120 @@ h1 {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Estilos para ayuda */
+.help-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.help-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.help-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.help-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.help-content {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s ease;
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.help-content h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+.help-content h3 {
+    color: #495057;
+    margin: 20px 0 10px 0;
+    font-size: 1.3rem;
+}
+
+.help-content p, .help-content li {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.help-content ul {
+    margin-left: 20px;
+}
+
+.help-highlight {
+    background: #e7f3ff;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #007bff;
+    margin: 15px 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: scale(0.9) translateY(-20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .help-content {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    .help-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
 }

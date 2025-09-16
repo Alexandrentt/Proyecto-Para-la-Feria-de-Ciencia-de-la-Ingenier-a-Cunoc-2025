@@ -17,6 +17,7 @@
         <header>
             <h1>♻️ Clasificador de Basura IA</h1>
             <p class="subtitle">Identifica automáticamente: Orgánico 🍌 • Reciclable ♻️ • No Reciclable 🚫</p>
+            <button id="help-btn" class="help-btn" onclick="showHelp()">❓ Ayuda</button>
         </header>
 
         <div class="card">
@@ -70,6 +71,65 @@
 
     <div class="footer">
         <p>🌱 Clasificador de Basura con IA • Ayuda al medio ambiente clasificando correctamente</p>
+    </div>
+
+    <!-- Modal de Ayuda -->
+    <div id="help-modal" class="help-modal">
+        <div class="help-content">
+            <button class="close-btn" onclick="hideHelp()">×</button>
+            <h2>❓ Centro de Ayuda</h2>
+
+            <div class="help-highlight">
+                <h3>🎯 ¿Cómo funciona?</h3>
+                <p>Esta aplicación utiliza Inteligencia Artificial para clasificar objetos en tres categorías:</p>
+                <ul>
+                    <li><strong>🍌 Orgánico:</strong> Basura que se descompone naturalmente</li>
+                    <li><strong>♻️ Reciclable:</strong> Materiales que pueden reutilizarse</li>
+                    <li><strong>🚫 No Reciclable:</strong> Basura que va a vertedero</li>
+                </ul>
+            </div>
+
+            <h3>📱 Modo Webcam</h3>
+            <p>1. Haz clic en "🎥 Usar Webcam"</p>
+            <p>2. Permite el acceso a la cámara</p>
+            <p>3. La IA detectará objetos automáticamente</p>
+            <p>4. <strong>Haz clic en un objeto</strong> para clasificarlo</p>
+            <p>5. Verás el resultado con el nivel de confianza</p>
+
+            <h3>📸 Subir Imagen</h3>
+            <p>1. Haz clic en "📸 Subir Imagen"</p>
+            <p>2. Selecciona o arrastra una imagen</p>
+            <p>3. Haz clic en "🤖 Clasificar Imagen"</p>
+
+            <h3>🎯 Detección Multiobjeto</h3>
+            <p>La aplicación puede detectar múltiples objetos en la imagen:</p>
+            <ul>
+                    <li>Verás rectángulos verdes alrededor de los objetos detectados</li>
+                    <li>Cada objeto tiene un número en la esquina</li>
+                    <li>Haz clic en el objeto que quieres clasificar</li>
+                    <li>El rectángulo se volverá rojo cuando esté seleccionado</li>
+                </ul>
+
+            <h3>📊 Consejos para mejores resultados</h3>
+            <ul>
+                <li>Asegúrate de que el objeto esté bien iluminado</li>
+                <li>Mantén la cámara estable</li>
+                <li>Evita fondos complejos</li>
+                <li>Los objetos deben ocupar al menos 1/4 de la imagen</li>
+            </ul>
+
+            <h3>🔧 Solución de problemas</h3>
+            <ul>
+                <li><strong>"Modelo no cargado":</strong> Espera a que termine la carga inicial</li>
+                <li><strong>"Permisos denegados":</strong> Permite el acceso a la cámara</li>
+                <li><strong>"No se detectan objetos":</strong> Intenta con mejor iluminación</li>
+            </ul>
+
+            <div class="help-highlight">
+                <h3>🌱 Impacto Ambiental</h3>
+                <p>Clasificar correctamente la basura reduce la contaminación y ayuda a reciclar más materiales. ¡Cada clasificación cuenta!</p>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
