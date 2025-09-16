@@ -1,7 +1,7 @@
 // Configuración
 const MODEL_URL = './my_model/';
-let model, cocoModel, webcam, currentMode = 'webcam';
-let isModelLoaded = false, isCocoLoaded = false;
+let model, objectDetector, webcam, currentMode = 'webcam';
+let isModelLoaded = false, isObjectDetectorLoaded = false;
 let detectedObjects = [];
 let selectedObjectIndex = -1;
 let classificationHistory = [];
@@ -31,8 +31,8 @@ async function initApp() {
         return;
     }
 
-    if (typeof cocoSsd === 'undefined') {
-        updateStatus('❌ COCO-SSD no cargado', 'error');
+    if (typeof FilesetResolver === 'undefined') {
+        updateStatus('❌ MediaPipe Tasks Vision no cargado', 'error');
         return;
     }
 
@@ -41,7 +41,7 @@ async function initApp() {
     // Cargar modelos en paralelo
     await Promise.all([
         loadModel(),
-        loadCocoModel()
+        loadObjectDetector()
     ]);
 
     // Configurar eventos
@@ -55,7 +55,7 @@ async function initApp() {
     showSection('main');
 
     // Iniciar modo webcam si los modelos están cargados
-    if (isModelLoaded && isCocoLoaded) {
+    if (isModelLoaded && isObjectDetectorLoaded) {
         await initWebcam();
     }
 }
@@ -89,21 +89,46 @@ async function loadModel() {
     }
 }
 
-async function loadCocoModel() {
+async function loadObjectDetector() {
     try {
         updateStatus('📦 Cargando modelo de detección de objetos...', 'loading');
 
-        // Cargar modelo COCO-SSD
-        cocoModel = await cocoSsd.load();
-        console.log('✅ Modelo COCO-SSD cargado:', cocoModel);
+        // Verificar que la librería esté disponible
+        if (typeof FilesetResolver === 'undefined') {
+            throw new Error('MediaPipe Tasks Vision not loaded. Using fallback mode.');
+        }
 
-        isCocoLoaded = true;
+        // Cargar modelo MediaPipe Object Detector
+        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+        objectDetector = await ObjectDetector.createFromOptions(vision, {
+            baseOptions: {
+                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
+                delegate: "GPU"
+            },
+            scoreThreshold: 0.5,
+            runningMode: "IMAGE"
+        });
+
+        console.log('✅ Modelo MediaPipe Object Detector cargado:', objectDetector);
+
+        isObjectDetectorLoaded = true;
         updateStatus('✅ Modelo de detección cargado correctamente', 'success');
 
     } catch (error) {
-        console.error('❌ Error cargando COCO-SSD:', error);
-        updateStatus(`❌ Error COCO-SSD: ${error.message}`, 'error');
-        isCocoLoaded = false;
+        console.error('❌ Error cargando MediaPipe Object Detector:', error);
+        console.log('🔄 Continuando sin detección de objetos múltiples');
+
+        // Fallback: continuar sin Object Detector
+        isObjectDetectorLoaded = false;
+        objectDetector = null;
+
+        // Cambiar automáticamente a modo single si estamos en multi
+        if (scanMode === 'multi') {
+            scanMode = 'single';
+            updateScanModeButtons();
+        }
+
+        updateStatus('⚠️ Modo single activado (sin detección múltiple)', 'error');
     }
 }
 
@@ -113,9 +138,9 @@ async function initWebcam() {
         return;
     }
 
-    // Solo requerir COCO-SSD si está en modo multi
-    if (scanMode === 'multi' && !isCocoLoaded) {
-        updateStatus('❌ COCO-SSD no cargado para modo múltiple', 'error');
+    // Solo requerir Object Detector si está en modo multi
+    if (scanMode === 'multi' && !isObjectDetectorLoaded) {
+        updateStatus('❌ Object Detector no cargado para modo múltiple', 'error');
         return;
     }
 
@@ -191,13 +216,25 @@ async function predictWebcam() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(webcam.canvas, 0, 0);
 
-        if (scanMode === 'multi' && cocoModel) {
-            // Modo múltiple: usar COCO-SSD
-            // Detectar objetos con COCO-SSD
-            const cocoPredictions = await cocoModel.detect(canvas);
+        if (scanMode === 'multi' && objectDetector) {
+            // Modo múltiple: usar MediaPipe Object Detector
+            // Convertir canvas a imagen para detección
+            const img = new Image();
+            img.src = canvas.toDataURL();
+            await new Promise(resolve => img.onload = resolve);
+
+            // Detectar objetos con MediaPipe
+            const detections = await objectDetector.detect(img);
+
+            // Adaptar formato de MediaPipe al esperado
+            const predictions = detections.map(d => ({
+                class: d.categories[0].categoryName,
+                score: d.categories[0].score,
+                bbox: [d.boundingBox.originX, d.boundingBox.originY, d.boundingBox.width, d.boundingBox.height]
+            }));
 
             // Filtrar objetos relevantes para clasificación de basura
-            detectedObjects = filterRelevantObjects(cocoPredictions);
+            detectedObjects = filterRelevantObjects(predictions);
 
             // Dibujar bounding boxes
             drawBoundingBoxes(ctx, detectedObjects);
@@ -578,11 +615,25 @@ function updatePageTitle(sectionName) {
 }
 
 function setScanMode(mode) {
+    // Verificar si el modo multi está disponible
+    if (mode === 'multi' && !isObjectDetectorLoaded) {
+        alert('El modo múltiple requiere Object Detector, que no está disponible. Cambiando a modo single.');
+        mode = 'single';
+    }
+
     scanMode = mode;
 
     // Actualizar botones
-    document.getElementById('single-mode-btn').classList.toggle('active', mode === 'single');
-    document.getElementById('multi-mode-btn').classList.toggle('active', mode === 'multi');
+    const singleBtn = document.getElementById('single-mode-btn');
+    const multiBtn = document.getElementById('multi-mode-btn');
+
+    if (singleBtn) singleBtn.classList.toggle('active', mode === 'single');
+    if (multiBtn) {
+        multiBtn.classList.toggle('active', mode === 'multi');
+        // Deshabilitar si Object Detector no está disponible
+        multiBtn.disabled = !isObjectDetectorLoaded;
+        multiBtn.style.opacity = isObjectDetectorLoaded ? '1' : '0.5';
+    }
 
     // Reiniciar selección y objetos detectados
     selectedObjectIndex = -1;
@@ -634,10 +685,21 @@ async function captureAndClassify() {
         currentImageData = canvas.toDataURL('image/jpeg', 0.8);
 
         // Procesar según el modo de escaneo
-        if (scanMode === 'multi' && cocoModel) {
-            // Detectar objetos
-            const cocoPredictions = await cocoModel.detect(canvas);
-            detectedObjects = filterRelevantObjects(cocoPredictions);
+        if (scanMode === 'multi' && objectDetector) {
+            // Convertir canvas a imagen
+            const img = new Image();
+            img.src = canvas.toDataURL();
+            await new Promise(resolve => img.onload = resolve);
+
+            // Detectar objetos con MediaPipe
+            const detections = await objectDetector.detect(img);
+            const predictions = detections.map(d => ({
+                class: d.categories[0].categoryName,
+                score: d.categories[0].score,
+                bbox: [d.boundingBox.originX, d.boundingBox.originY, d.boundingBox.width, d.boundingBox.height]
+            }));
+
+            detectedObjects = filterRelevantObjects(predictions);
 
             if (detectedObjects.length > 0) {
                 // Usar el primer objeto detectado
