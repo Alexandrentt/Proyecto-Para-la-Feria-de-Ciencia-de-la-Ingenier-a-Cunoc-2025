@@ -1,1 +1,1 @@
-{"tfjsVersion":"1.7.4","tmVersion":"2.4.10","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2025-09-16T03:04:57.223Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["Class 1","Class 2"],"imageSize":224}
+{"tfjsVersion":"1.7.4","tmVersion":"2.4.10","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2025-09-25T23:34:02.757Z","userMetadata":{},"modelName":"Modelo que detecta basura","labels":["lata ","No se reconoce o es el fondo solamente","botella","galgería"],"imageSize":224}

@@ -52,46 +52,9 @@
     --dark-color: #19381f;
     --white: #ffffff;
     --gray-100: #1a1a1a;
-    --gray-200: #2a2a2a;
-    --gray-300: #3a3a3a;
-    --gray-400: #4a4a4a;
-    --gray-500: #5a5a5a;
-    --gray-600: #6a6a6a;
-    --gray-700: #7a7a7a;
-    --gray-800: #8a8a8a;
-    --gray-900: #9a9a9a;
-    --black: #aaaaaa;
-
-    /* Fondos y superficies */
-    --bg-primary: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 50%, #3a3a3a 100%);
-    --bg-secondary: #2a2a2a;
-    --bg-tertiary: #3a3a3a;
-    --bg-card: #2a2a2a;
-    --bg-modal: rgba(0, 0, 0, 0.9);
-
-    /* Textos */
-    --text-primary: #ffffff;
-    --text-secondary: #cccccc;
-    --text-light: #ffffff;
-    --text-muted: #888888;
-
-    /* Bordes y sombras */
-    --border-color: #4a4a4a;
-    --shadow: 0 2px 8px rgba(0,0,0,0.5);
-    --shadow-hover: 0 5px 15px rgba(0,0,0,0.6);
-}
 
 /* Asegurar contraste en elementos con fondo blanco en tema oscuro */
-[data-theme="dark"] .card,
-[data-theme="dark"] .history-item,
-[data-theme="dark"] .chart-wrapper,
-[data-theme="dark"] .stat-item,
-[data-theme="dark"] .training-description,
 [data-theme="dark"] .help-content,
-[data-theme="dark"] .dropdown-menu {
-    color: var(--text-primary) !important;
-}
-
 [data-theme="dark"] .card h1,
 [data-theme="dark"] .card h2,
 [data-theme="dark"] .card h3,
@@ -116,9 +79,6 @@
     .config-item {
         margin-bottom: 0;
     }
-
-    .mode-options {
-        grid-template-columns: 1fr;
         gap: 10px;
     }
 

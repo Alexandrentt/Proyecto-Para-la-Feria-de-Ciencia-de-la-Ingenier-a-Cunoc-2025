@@ -1,23 +1,21 @@
 // Configuración
 const MODEL_URL = './my_model/';
-let model, objectDetector, webcam, currentMode = 'webcam';
-let isModelLoaded = false, isObjectDetectorLoaded = false;
-let detectedObjects = [];
-let selectedObjectIndex = -1;
+let model, webcam, currentMode = 'webcam';
+let isModelLoaded = false;
 let classificationHistory = [];
 let categoryChart = null;
 let dailyChart = null;
 let trainingDataset = [];
 let currentImageData = null;
 let currentView = 'main';
-let scanMode = 'single'; // 'single' o 'multi'
+// Modo de escaneo eliminado - solo individual
 let webcamMode = 'capture'; // 'continuous' o 'capture'
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', initApp);
 
 async function initApp() {
-    console.log('🚀 Iniciando Clasificador de Basura con Detección Multiobjeto');
+    console.log('🚀 Iniciando Clasificador de Basura IA');
     updateStatus('🔄 Verificando librerías...', 'loading');
 
     // Verificar librerías
@@ -31,18 +29,12 @@ async function initApp() {
         return;
     }
 
-    if (typeof FilesetResolver === 'undefined') {
-        updateStatus('❌ MediaPipe Tasks Vision no cargado', 'error');
-        return;
-    }
+    // MediaPipe Tasks Vision removido - solo usamos modo individual
 
     console.log('✅ Librerías cargadas correctamente');
 
-    // Cargar modelos en paralelo
-    await Promise.all([
-        loadModel(),
-        loadObjectDetector()
-    ]);
+    // Cargar solo el modelo de clasificación
+    await loadModel();
 
     // Configurar eventos
     setupEventListeners();
@@ -89,43 +81,13 @@ async function loadModel() {
     }
 }
 
-async function loadObjectDetector() {
-    try {
-        updateStatus('📦 Cargando modelo de detección de objetos...', 'loading');
-
-        // Cargar modelo SSD MobileNet v2 de TensorFlow Hub
-        objectDetector = await tf.loadGraphModel('https://tfhub.dev/tensorflow/tfjs-model/ssd_mobilenet_v2/1/default/1/model.json');
-
-        console.log('✅ Modelo TF Hub Object Detector cargado:', objectDetector);
-
-        isObjectDetectorLoaded = true;
-        updateStatus('✅ Modelo de detección cargado correctamente', 'success');
-
-    } catch (error) {
-        console.error('❌ Error cargando TF Hub Object Detector:', error);
-        console.log('🔄 Continuando sin detección de objetos múltiples');
-
-        // Fallback: continuar sin Object Detector
-        isObjectDetectorLoaded = false;
-        objectDetector = null;
-
-        // Cambiar automáticamente a modo single si estamos en multi
-        if (scanMode === 'multi') {
-            scanMode = 'single';
-            updateScanModeButtons();
-        }
-
-        updateStatus('⚠️ Modo single activado (sin detección múltiple)', 'error');
-    }
-}
+// Función de detección de objetos eliminada - solo usamos modo individual
 
 async function initWebcam() {
     if (!isModelLoaded) {
         updateStatus('❌ Modelo de basura no cargado', 'error');
         return;
     }
-
-    // Nota: Object Detector se requiere solo para modo multi, pero permitimos iniciar webcam
 
     try {
         updateStatus('🎥 Iniciando cámara...', 'loading');
@@ -156,24 +118,19 @@ async function initWebcam() {
         let statusMessage = '🎥 Cámara activa';
 
         if (webcamMode === 'continuous') {
-            statusMessage += scanMode === 'multi'
-                ? ' - Haz clic en un objeto para clasificarlo'
-                : ' - Muestra un objeto para clasificarlo';
+            statusMessage += ' - Muestra un objeto para clasificarlo';
         } else {
             statusMessage += ' - Presiona "Capturar" para analizar';
         }
 
         updateStatus(statusMessage, 'success');
 
-        // Reiniciar selección
-        selectedObjectIndex = -1;
-
         // Iniciar predicción continua
         predictWebcam();
 
     } catch (error) {
-        console.error('❌ Error con webcam:', error);
-        let errorMsg = '❌ Error de cámara: ';
+        console.error(' Error con webcam:', error);
+        let errorMsg = ' Error de cámara: ';
 
         if (error.name === 'NotAllowedError') {
             errorMsg += 'Permisos denegados. Permite el acceso a la cámara.';
@@ -199,59 +156,13 @@ async function predictWebcam() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(webcam.canvas, 0, 0);
 
-        if (scanMode === 'multi' && objectDetector) {
-            // Modo múltiple: usar MediaPipe Object Detector
-            // Convertir canvas a imagen para detección
-            const img = new Image();
-            img.src = canvas.toDataURL();
-            await new Promise(resolve => img.onload = resolve);
+        // Modo individual: sistema simplificado
+        // Guardar imagen completa para feedback
+        currentImageData = canvas.toDataURL('image/jpeg', 0.8);
 
-            // Detectar objetos con MediaPipe
-            const detections = await objectDetector.detect(img);
-
-            // Adaptar formato de MediaPipe al esperado
-            const predictions = detections.map(d => ({
-                class: d.categories[0].categoryName,
-                score: d.categories[0].score,
-                bbox: [d.boundingBox.originX, d.boundingBox.originY, d.boundingBox.width, d.boundingBox.height]
-            }));
-
-            // Filtrar objetos relevantes para clasificación de basura
-            detectedObjects = filterRelevantObjects(predictions);
-
-            // Dibujar bounding boxes
-            drawBoundingBoxes(ctx, detectedObjects);
-
-            // Si hay un objeto seleccionado, hacer predicción solo en esa región
-            if (selectedObjectIndex >= 0 && selectedObjectIndex < detectedObjects.length) {
-                const selectedObj = detectedObjects[selectedObjectIndex];
-                const croppedCanvas = cropObjectFromCanvas(canvas, selectedObj);
-
-                // Guardar imagen para feedback
-                currentImageData = croppedCanvas.toDataURL('image/jpeg', 0.8);
-
-                // Hacer predicción en el objeto seleccionado
-                const predictions = await model.predict(croppedCanvas);
-                displayPrediction(predictions);
-            } else {
-                // Limpiar imagen actual
-                currentImageData = null;
-                // Mostrar mensaje para seleccionar objeto
-                document.getElementById('prediction').textContent = 'Haz clic en un objeto para clasificarlo';
-                document.getElementById('confidence').textContent = '';
-            }
-        } else if (scanMode === 'single') {
-            // Modo uno por uno: sistema tradicional
-            detectedObjects = [];
-            selectedObjectIndex = -1;
-
-            // Guardar imagen completa para feedback
-            currentImageData = canvas.toDataURL('image/jpeg', 0.8);
-
-            // Hacer predicción en toda la imagen
-            const predictions = await model.predict(canvas);
-            displayPrediction(predictions);
-        }
+        // Hacer predicción en toda la imagen
+        const predictions = await model.predict(canvas);
+        displayPrediction(predictions);
 
         // Continuar el loop
         requestAnimationFrame(predictWebcam);
@@ -289,9 +200,7 @@ function setupEventListeners() {
         }
     });
 
-    // Event listener para selección de objetos en canvas
-    const canvas = document.getElementById('webcam-canvas');
-    canvas.addEventListener('click', handleCanvasClick);
+    // Event listener para canvas eliminado - no necesario en modo individual
 
     // Cerrar menú al hacer clic fuera
     document.addEventListener('click', (e) => {
@@ -375,7 +284,7 @@ async function classifyUploadedImage() {
 
     } catch (error) {
         console.error('Error clasificando imagen:', error);
-        document.getElementById('prediction').textContent = '❌ Error al clasificar imagen';
+        document.getElementById('prediction').textContent = ' Error al clasificar imagen';
     }
 }
 
@@ -403,24 +312,24 @@ function displayPrediction(predictions) {
     // Guardar en historial
     saveToHistory(label, confidence, topPrediction.className);
 
-    console.log('🎯 Predicción:', label, `(${confidence}%)`);
+    console.log('Predicción:', label, `(${confidence}%)`);
 }
 
 function formatLabel(className) {
     const label = className.toLowerCase();
 
-    // Mapear según nombres comunes
-    if (label.includes('organi') || label.includes('organic') || label.includes('class 1') || label.includes('0')) {
-        return '🍌 Orgánico';
-    } else if ((label.includes('recicla') || label.includes('recycla')) && !label.includes('no')) {
-        return '♻️ Reciclable';
-    } else if (label.includes('no') || label.includes('class 2') || label.includes('1')) {
-        return '🚫 No Reciclable';
-    }
+    if (label.includes('lata')) {
+        return ' Lata - Inorgánico';
+    } else if (label.includes('No se reconoce o es el fondo solamente')) {
+        return 'No se reconoce o es el fondo solamente';
+    } else if (label.includes('botella')) {
+        return 'Botella - Reciclable';
+    } else if (label.includes('galgería')){
+        return 'Galgería - Reciclable';
+    }   return `Esto no deberia aparecer, solo el nombre de la clase interna, osea: ${className}`;
+        }
 
-    // Retornar el nombre original con emoji genérico
-    return `🗂️ ${className}`;
-}
+    
 
 function updateStatus(message, type) {
     const statusEl = document.getElementById('status');
@@ -430,128 +339,6 @@ function updateStatus(message, type) {
 
     statusEl.className = `status ${type}`;
     console.log(message);
-}
-
-// Funciones para detección multiobjeto
-function filterRelevantObjects(predictions) {
-    // Índices de COCO dataset para objetos relevantes (basura/reciclables)
-    const relevantClasses = [
-        39, // bottle
-        41, // cup
-        45, // bowl
-        47, // apple
-        48, // sandwich
-        49, // orange
-        51, // carrot
-        65, // remote
-        67, // cell phone
-        70, // toaster
-        72, // laptop
-        73, // mouse
-        74, // remote
-        76, // keyboard
-        84, // book
-        85, // clock
-        86, // vase
-        87, // scissors
-        89, // toothbrush
-        90  // hair drier
-    ];
-
-    return predictions.filter(pred =>
-        pred.score > 0.5 && relevantClasses.includes(parseInt(pred.class))
-    );
-}
-
-function drawBoundingBoxes(ctx, objects) {
-    // Mapeo de índices COCO a nombres
-    const cocoClassNames = {
-        39: 'bottle', 41: 'cup', 45: 'bowl', 47: 'apple', 48: 'sandwich',
-        49: 'orange', 51: 'carrot', 65: 'remote', 67: 'cell phone',
-        70: 'toaster', 72: 'laptop', 73: 'mouse', 74: 'remote',
-        76: 'keyboard', 84: 'book', 85: 'clock', 86: 'vase',
-        87: 'scissors', 89: 'toothbrush', 90: 'hair drier'
-    };
-
-    objects.forEach((obj, index) => {
-        const [x, y, width, height] = obj.bbox;
-
-        // Color del bounding box
-        const isSelected = index === selectedObjectIndex;
-        ctx.strokeStyle = isSelected ? '#ff0000' : '#00ff00';
-        ctx.lineWidth = isSelected ? 4 : 2;
-        ctx.fillStyle = isSelected ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 0, 0.2)';
-
-        // Dibujar rectángulo
-        ctx.fillRect(x, y, width, height);
-        ctx.strokeRect(x, y, width, height);
-
-        // Dibujar etiqueta
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '14px Arial';
-        const className = cocoClassNames[parseInt(obj.class)] || obj.class;
-        const label = `${className} ${(obj.score * 100).toFixed(1)}%`;
-        const textWidth = ctx.measureText(label).width;
-
-        ctx.fillRect(x, y - 25, textWidth + 10, 20);
-        ctx.fillStyle = '#000000';
-        ctx.fillText(label, x + 5, y - 10);
-
-        // Dibujar número del objeto
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(x + width - 15, y + 15, 12, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.fillStyle = '#000000';
-        ctx.fillText((index + 1).toString(), x + width - 20, y + 20);
-    });
-}
-
-function cropObjectFromCanvas(canvas, obj) {
-    const [x, y, width, height] = obj.bbox;
-    const croppedCanvas = document.createElement('canvas');
-    const croppedCtx = croppedCanvas.getContext('2d');
-
-    // Agregar padding alrededor del objeto
-    const padding = 10;
-    const cropX = Math.max(0, x - padding);
-    const cropY = Math.max(0, y - padding);
-    const cropWidth = Math.min(canvas.width - cropX, width + 2 * padding);
-    const cropHeight = Math.min(canvas.height - cropY, height + 2 * padding);
-
-    croppedCanvas.width = cropWidth;
-    croppedCanvas.height = cropHeight;
-
-    croppedCtx.drawImage(
-        canvas,
-        cropX, cropY, cropWidth, cropHeight,
-        0, 0, cropWidth, cropHeight
-    );
-
-    return croppedCanvas;
-}
-
-function handleCanvasClick(event) {
-    if (!detectedObjects.length) return;
-
-    const canvas = document.getElementById('webcam-canvas');
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    // Verificar si el clic está dentro de algún bounding box
-    for (let i = 0; i < detectedObjects.length; i++) {
-        const [objX, objY, objWidth, objHeight] = detectedObjects[i].bbox;
-        if (x >= objX && x <= objX + objWidth &&
-            y >= objY && y <= objY + objHeight) {
-            selectedObjectIndex = i;
-            console.log(`Objeto seleccionado: ${detectedObjects[i].class}`);
-            return;
-        }
-    }
-
-    // Si no se hizo clic en ningún objeto, deseleccionar
-    selectedObjectIndex = -1;
 }
 
 // Funciones para navegación
@@ -615,38 +402,7 @@ function updatePageTitle(sectionName) {
     }
 }
 
-function setScanMode(mode) {
-    // Verificar si el modo multi está disponible
-    if (mode === 'multi' && !isObjectDetectorLoaded) {
-        alert('El modo múltiple requiere Object Detector, que no está disponible. Cambiando a modo single.');
-        mode = 'single';
-    }
-
-    scanMode = mode;
-
-    // Actualizar botones
-    const singleBtn = document.getElementById('single-mode-btn');
-    const multiBtn = document.getElementById('multi-mode-btn');
-
-    if (singleBtn) singleBtn.classList.toggle('active', mode === 'single');
-    if (multiBtn) {
-        multiBtn.classList.toggle('active', mode === 'multi');
-        // Deshabilitar si Object Detector no está disponible
-        multiBtn.disabled = !isObjectDetectorLoaded;
-        multiBtn.style.opacity = isObjectDetectorLoaded ? '1' : '0.5';
-    }
-
-    // Reiniciar selección y objetos detectados
-    selectedObjectIndex = -1;
-    detectedObjects = [];
-
-    // Reiniciar webcam si está activa
-    if (webcam && currentMode === 'webcam') {
-        initWebcam();
-    }
-
-    console.log(`Modo de escaneo cambiado a: ${mode}`);
-}
+// Función setScanMode eliminada - solo modo individual
 
 function setWebcamMode(mode) {
     webcamMode = mode;
@@ -685,58 +441,9 @@ async function captureAndClassify() {
         // Guardar imagen para feedback
         currentImageData = canvas.toDataURL('image/jpeg', 0.8);
 
-        // Procesar según el modo de escaneo
-        if (scanMode === 'multi' && objectDetector) {
-            const imgTensor = tf.browser.fromPixels(canvas);
-            const resized = tf.image.resizeBilinear(imgTensor, [320, 320]);
-            const normalized = resized.div(255.0);
-            const batched = normalized.expandDims(0);
-
-            const result = await objectDetector.executeAsync(batched);
-            const boxes = result[0].dataSync();
-            const scores = result[1].dataSync();
-            const classes = result[2].dataSync();
-            const numDetections = Math.floor(result[3].dataSync()[0]);
-
-            const predictions = [];
-            for (let i = 0; i < numDetections; i++) {
-                if (scores[i] > 0.5) {
-                    predictions.push({
-                        class: classes[i].toString(),
-                        score: scores[i],
-                        bbox: [
-                            boxes[i * 4] * canvas.width,
-                            boxes[i * 4 + 1] * canvas.height,
-                            boxes[i * 4 + 2] * canvas.width,
-                            boxes[i * 4 + 3] * canvas.height
-                        ]
-                    });
-                }
-            }
-
-            detectedObjects = filterRelevantObjects(predictions);
-
-            imgTensor.dispose();
-            resized.dispose();
-            normalized.dispose();
-            batched.dispose();
-
-            if (detectedObjects.length > 0) {
-                // Usar el primer objeto detectado
-                const selectedObj = detectedObjects[0];
-                const croppedCanvas = cropObjectFromCanvas(canvas, selectedObj);
-                const predictions = await model.predict(croppedCanvas);
-                displayPrediction(predictions);
-            } else {
-                // No se detectaron objetos, usar imagen completa
-                const predictions = await model.predict(canvas);
-                displayPrediction(predictions);
-            }
-        } else {
-            // Modo single o sin COCO-SSD
-            const predictions = await model.predict(canvas);
-            displayPrediction(predictions);
-        }
+        // Modo individual: usar imagen completa
+        const predictions = await model.predict(canvas);
+        displayPrediction(predictions);
 
     } catch (error) {
         console.error('Error en captura y clasificación:', error);
@@ -859,9 +566,9 @@ function exportHistory() {
 }
 
 function getCategoryFromLabel(label) {
-    if (label.includes('🍌')) return 'organic';
-    if (label.includes('♻️')) return 'recyclable';
-    if (label.includes('🚫')) return 'non-recyclable';
+    if (label.includes('organico')) return 'organic';
+    if (label.includes('reciclable')) return 'recyclable';
+    if (label.includes('no reciclable')) return 'non-recyclable';
     return 'unknown';
 }
 

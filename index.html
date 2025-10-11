@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>♻️ Waste Classifier AI</title>
+    <title> Waste Classifier </title>
 
     <!-- Librerías CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <!-- COCO-SSD eliminado - solo modo individual -->
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -29,15 +29,14 @@
                 <button onclick="showSection('history')" data-i18n="history" data-i18n-category="menu">📊 Historial</button>
                 <button onclick="showSection('charts')" data-i18n="charts" data-i18n-category="menu">📈 Estadísticas</button>
                 <button onclick="showSection('training')" data-i18n="training" data-i18n-category="menu">🧠 Dataset</button>
-                <button onclick="showSection('config')" data-i18n="config" data-i18n-category="menu">⚙️ Configuración</button>
             </div>
         </div>
 
         <!-- Vista Principal -->
         <div id="main-view" class="view active">
             <header>
-                <h1>♻️ Clasificador de Basura IA</h1>
-                <p class="subtitle">Identifica automáticamente: Orgánico 🍌 • Reciclable ♻️ • No Reciclable 🚫</p>
+                <h1>Clasificador de basura</h1>
+                <p class="subtitle">Identifica automáticamente: Orgánico • Reciclable • No Reciclable </p>
             </header>
 
             <div class="card">
@@ -45,10 +44,10 @@
                 <!-- Selector de Modo -->
                 <div class="mode-selector">
                     <button class="mode-btn active" onclick="switchMode('webcam')">
-                        🎥 Usar Webcam
+                         Usar Webcam
                     </button>
                     <button class="mode-btn" onclick="switchMode('upload')">
-                        📸 Subir Imagen
+                         Subir Imagen
                     </button>
                 </div>
 
@@ -71,7 +70,7 @@
                     <input type="file" id="file-input" accept="image/*">
                     <img id="preview-image" class="preview-image" style="display: none;">
                     <button id="classify-image-btn" class="classify-btn" style="display: none;" onclick="classifyUploadedImage()">
-                        🤖 Clasificar Imagen
+                         Clasificar Imagen
                     </button>
                 </div>
 
@@ -85,33 +84,22 @@
                 <div class="quick-config">
                     <div class="config-row">
                         <div class="config-item">
-                            <label>Modo de Escaneo:</label>
-                            <div class="mode-options">
-                                <button id="single-mode-btn" class="mode-option active" onclick="setScanMode('single')">
-                                    🔍 Uno por Uno
-                                </button>
-                                <button id="multi-mode-btn" class="mode-option" onclick="setScanMode('multi')">
-                                    🎯 Múltiples Objetos
-                                </button>
-                            </div>
-                        </div>
-                        <div class="config-item">
                             <label>Modo Webcam:</label>
                             <div class="mode-options">
                                 <button id="continuous-mode-btn" class="mode-option" onclick="setWebcamMode('continuous')">
-                                    🔄 Continua
+                                     Continua
                                 </button>
                                 <button id="capture-mode-btn" class="mode-option active" onclick="setWebcamMode('capture')">
-                                    📸 Captura
+                                     Captura
                                 </button>
                             </div>
                         </div>
                     </div>
-    
+     
                     <!-- Botón de Captura (solo visible en modo captura) -->
                     <div id="capture-controls" class="capture-controls">
                         <button id="capture-btn" class="capture-btn" onclick="captureAndClassify()">
-                            📸 Capturar y Clasificar
+                             Capturar y Clasificar
                         </button>
                     </div>
                 </div>
@@ -121,7 +109,7 @@
         <!-- Vista de Historial -->
         <div id="history-view" class="view">
             <header>
-                <h1>📊 Historial de Clasificaciones</h1>
+                <h1> Historial de Clasificaciones</h1>
             </header>
             <div class="card">
                 <div id="history-list" class="history-list">
@@ -137,7 +125,7 @@
         <!-- Vista de Estadísticas -->
         <div id="charts-view" class="view">
             <header>
-                <h1>📈 Estadísticas</h1>
+                <h1> Estadísticas</h1>
             </header>
             <div class="card">
                 <div class="charts-container">
@@ -170,7 +158,7 @@
         <!-- Vista de Dataset -->
         <div id="training-view" class="view">
             <header>
-                <h1 data-i18n="training" data-i18n-category="titles">🧠 Dataset de Reentrenamiento</h1>
+                <h1 data-i18n="training" data-i18n-category="titles"> Dataset de Reentrenamiento</h1>
             </header>
             <div class="card">
                 <div class="training-info">
@@ -196,18 +184,11 @@
             </div>
         </div>
 
-        <!-- Vista de Configuración -->
-        <div id="config-view" class="view">
-            <header>
-                <h1 data-i18n="config" data-i18n-category="titles">⚙️ Configuración</h1>
-            </header>
-            <!-- El contenido se genera dinámicamente por settings.js -->
-        </div>
 
     </div>
 
     <div class="footer">
-        <p>🌱 Clasificador de Basura con IA • Ayuda al medio ambiente clasificando correctamente</p>
+        <p>Proyecto Feria de ciencia Ingeniería 2025</p>
     </div>
 
     <script src="script.js"></script>
