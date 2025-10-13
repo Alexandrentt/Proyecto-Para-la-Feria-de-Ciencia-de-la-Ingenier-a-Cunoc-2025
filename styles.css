@@ -52,6 +52,7 @@
     --dark-color: #19381f;
     --white: #ffffff;
     --gray-100: #1a1a1a;
+}
 
 /* Asegurar contraste en elementos con fondo blanco en tema oscuro */
 [data-theme="dark"] .card h1,
@@ -77,8 +78,6 @@
 
     .config-item {
         margin-bottom: 0;
-    }
-        gap: 10px;
     }
 
     .mode-option {
@@ -116,7 +115,6 @@ body {
 
 /* Menú desplegable */
     /* .help-content and .help-btn removed (help UI removed) */
-    background: rgba(255, 255, 255, 1);
     /* Help UI styles removed */
 .dropdown-menu button:hover {
     background: #f8f9fa;
@@ -293,7 +291,9 @@ h1 {
     display: block;
     height: 60px;
     overflow: hidden;
-    padding: 8px 16px;
+    /* Hacer el nombre más prominente y responsivo */
+    padding: 12px 18px;
+    font-size: clamp(1.1rem, 3.5vw, 1.6rem);
     border-radius: 10px;
     width: 100%;
     box-sizing: border-box;
@@ -358,6 +358,9 @@ h1 {
 .confidence {
     font-size: 1.3rem;
     color: #6c757d;
+    text-align: center;
+    display: block;
+    margin: 8px auto 0 auto;
 }
 
 .status {
@@ -519,6 +522,9 @@ h1 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
+    justify-content: center; /* centrar la cuadricula de opciones */
+    justify-items: center; /* centrar cada celda */
+    align-items: center;
 }
 
 .mode-option {
@@ -535,6 +541,7 @@ h1 {
     white-space: normal;
     max-width: 220px;
     overflow-wrap: anywhere;
+    margin: 0 auto; /* centrar cada opción dentro de su columna */
 }
 
 .mode-option:hover {
@@ -955,4 +962,280 @@ input:checked + .slider:before {
 #status {
     white-space: pre-line;
     text-align: center;
+}
+
+/* Estilos para el menú desplegable de información de reciclaje */
+.recycling-info-dropdown {
+    margin-top: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: white;
+}
+
+.info-toggle-btn {
+    width: 100%;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #91cb3e 0%, #53a548 100%);
+    color: white;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-toggle-btn:hover {
+    background: linear-gradient(135deg, #7ab82f 0%, #459339 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.info-toggle-btn::after {
+    content: '▼';
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.info-toggle-btn.active::after {
+    transform: rotate(180deg);
+}
+
+.recycling-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+    background: #f8f9fa;
+}
+
+.recycling-content.show {
+    max-height: 800px;
+    padding: 20px;
+}
+
+.recycling-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.recycling-header h3 {
+    margin: 0;
+    color: #19381f;
+    font-size: 1.5rem;
+}
+
+.info-type-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: white;
+}
+
+.info-type-badge.reciclable {
+    background-color: #17a2b8;
+}
+
+.info-type-badge.organico {
+    background-color: #28a745;
+}
+
+.info-type-badge.no-reciclable {
+    background-color: #dc3545;
+}
+
+.recycling-body {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.info-description {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #495057;
+}
+
+.info-section {
+    margin-bottom: 20px;
+}
+
+.info-section:last-child {
+    margin-bottom: 0;
+}
+
+.info-section h4 {
+    color: #19381f;
+    margin-bottom: 12px;
+    font-size: 1.15rem;
+    border-left: 4px solid #91cb3e;
+    padding-left: 12px;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-list li {
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #53a548;
+    line-height: 1.5;
+    color: #495057;
+}
+
+.info-list li:last-child {
+    margin-bottom: 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Estilos para etiquetas de tipo de basura y botón de información */
+.waste-type-label {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    /* usar clamp para adaptar tamaño entre 0.85rem y 1.05rem según ancho */
+    font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+    margin: 8px 0;
+    text-align: center;
+    min-width: 120px;
+}
+
+.waste-type-label.reciclable {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.waste-type-label.organico {
+    background-color: #28a745;
+    color: white;
+}
+
+.waste-type-label.no-reciclable {
+    background-color: #dc3545;
+    color: white;
+}
+
+.info-btn {
+    background: linear-gradient(45deg, #007bff, #6610f2);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    /* padding y tamaño de fuente adaptativos */
+    padding: clamp(10px, 2.2vw, 14px) clamp(14px, 3vw, 20px);
+    font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+    box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
+}
+
+.info-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+}
+
+.info-btn:active {
+    transform: translateY(0);
+}
+
+/* Estilo adicional para botón de info en móvil (más grande) */
+.info-btn.custom-highlight {
+    border: 2px solid rgba(255,255,255,0.12);
+    box-shadow: 0 8px 30px rgba(102,16,242,0.18);
+    transform: translateY(0);
+}
+
+/* Ocultar selector de cámaras en escritorio; mostrar solo en móviles */
+.camera-options {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .camera-options {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        justify-items: center;
+    }
+    
+    .recycling-content.show {
+        max-height: 600px;
+    }
+    
+    .recycling-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Responsive para etiquetas y botón */
+@media (max-width: 768px) {
+    .waste-type-label {
+        font-size: clamp(0.85rem, 3.2vw, 1rem);
+        padding: 8px 12px;
+        min-width: 110px;
+    }
+
+    .info-btn {
+        padding: 12px 18px;
+        font-size: clamp(0.95rem, 3.8vw, 1.05rem);
+        width: 100%;
+        max-width: 420px; /* permitir botones más grandes en móviles grandes */
+        box-sizing: border-box;
+    }
+}
+
+/* Ajustes para el área de resultados: asegurar que el botón de clasificar también sea responsivo */
+.classify-btn {
+    padding: clamp(10px, 2.2vw, 15px) clamp(14px, 3vw, 24px);
+    font-size: clamp(0.95rem, 1.8vw, 1.05rem);
+}
+
+@media (max-width: 480px) {
+    .prediction {
+        gap: 8px;
+    }
+
+    .prediction-result {
+        font-size: clamp(1rem, 4.5vw, 1.2rem);
+        padding: 10px 12px;
+    }
+
+    .info-btn, .classify-btn {
+        width: 100%;
+        max-width: none;
+        padding: 14px 18px;
+    }
 }
