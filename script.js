@@ -1,37 +1,29 @@
 // Configuración
 const MODEL_URL = './my_model/';
 let model, webcam, currentMode = 'webcam';
+let isWebcamActive = false; // indica si la webcam ya está inicializada y en play
 let isModelLoaded = false;
-let classificationHistory = [];
-let categoryChart = null;
-let dailyChart = null;
-let trainingDataset = [];
 let currentImageData = null;
-let currentView = 'main';
-// Modo de escaneo eliminado - solo individual
 let webcamMode = 'capture'; // 'continuous' o 'capture'
+let currentView = 'home'; // or whatever default view you want
 
-// Inicialización
-document.addEventListener('DOMContentLoaded', initApp);
 
 async function initApp() {
-    console.log('🚀 Iniciando Clasificador de Basura IA');
-    updateStatus('🔄 Verificando librerías...', 'loading');
+    console.log(' Iniciando Clasificador de Basura');
+    updateStatus('Verificando librerías...', 'loading');
 
     // Verificar librerías
     if (typeof tf === 'undefined') {
-        updateStatus('❌ TensorFlow.js no cargado', 'error');
+        updateStatus(' TensorFlow.js no cargado', 'error');
         return;
     }
 
     if (typeof tmImage === 'undefined') {
-        updateStatus('❌ Teachable Machine no cargado', 'error');
+        updateStatus(' Teachable Machine no cargado', 'error');
         return;
     }
 
-    // MediaPipe Tasks Vision removido - solo usamos modo individual
-
-    console.log('✅ Librerías cargadas correctamente');
+    console.log('Librerías cargadas correctamente');
 
     // Cargar solo el modelo de clasificación
     await loadModel();
@@ -39,22 +31,26 @@ async function initApp() {
     // Configurar eventos
     setupEventListeners();
 
-    // Cargar historial y dataset
-    loadHistory();
-    loadTrainingDataset();
+    showSection('home');
 
-    // Mostrar vista principal por defecto
-    showSection('main');
-
-    // Iniciar modo webcam si el modelo de clasificación está cargado
     if (isModelLoaded) {
-        await initWebcam();
+        // Esperar un poco para asegurar que el canvas esté listo
+        setTimeout(async () => {
+            await initWebcam();
+        }, 300);
     }
+    if (isModelLoaded && currentMode === 'webcam') {
+    console.log('Inicializando cámara automáticamente...');
+    setTimeout(async () => {
+        await initWebcam();
+    }, 500);
+}
+
 }
 
 async function loadModel() {
     try {
-        updateStatus('📥 Cargando modelo de IA...', 'loading');
+        updateStatus('Cargando modelo de Techable Machine');
 
         // Verificar archivos del modelo
         const modelResponse = await fetch(MODEL_URL + 'model.json');
@@ -69,85 +65,175 @@ async function loadModel() {
 
         // Cargar modelo
         model = await tmImage.load(MODEL_URL + 'model.json', MODEL_URL + 'metadata.json');
-        console.log('✅ Modelo cargado:', model);
+        console.log('Modelo cargado:', model);
 
         isModelLoaded = true;
-        updateStatus('✅ Modelo cargado correctamente', 'success');
+        updateStatus('Modelo cargado correctamente', 'success');
+
+if (typeof currentMode !== 'undefined' && currentMode === 'webcam') {
+    console.log('Modelo cargado, iniciando cámara automáticamente...');
+    setTimeout(async () => {
+        try {
+            await initWebcam();
+        } catch (err) {
+            console.error('Error iniciando webcam automáticamente:', err);
+            updateStatus('Error al iniciar la cámara automáticamente', 'error');
+        }
+
+    }, 300); // pequeño retardo para asegurar que el DOM esté listo
+}
 
     } catch (error) {
-        console.error('❌ Error cargando modelo:', error);
-        updateStatus(`❌ Error: ${error.message}`, 'error');
+        console.error(' Error cargando modelo:', error);
+        updateStatus(`Error: ${error.message}`, 'error');
         isModelLoaded = false;
     }
 }
 
-// Función de detección de objetos eliminada - solo usamos modo individual
-
 async function initWebcam() {
+    console.log('initWebcam: entrando');
+    // Debug rápido: imprimir estados
+    console.log('initWebcam -> isModelLoaded:', isModelLoaded, ' isWebcamActive:', isWebcamActive, ' currentMode:', currentMode);
+
     if (!isModelLoaded) {
-        updateStatus('❌ Modelo de basura no cargado', 'error');
+        updateStatus('Modelo de basura no cargado', 'error');
+        console.warn('initWebcam: modelo no cargado, abortando');
+        return;
+    }
+
+    // Si ya fue marcada activa, evitar reiniciar (pero hacemos una verificación extra).
+    if (isWebcamActive && webcam && webcam.playing) {
+        console.log('initWebcam: webcam ya activa y en play, saliendo');
         return;
     }
 
     try {
         updateStatus('🎥 Iniciando cámara...', 'loading');
 
+        // Asegurar que el canvas existe en el DOM (evita race conditions)
+        const canvas = document.getElementById('webcam-canvas');
+        if (!canvas) {
+            // Esperar al próximo repaint y buscar de nuevo
+            console.warn('initWebcam: canvas no disponible, esperando repaint');
+            await new Promise(res => requestAnimationFrame(res));
+            await new Promise(res => setTimeout(res, 150));
+        }
+
         // Detectar si es móvil para usar cámara trasera
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         const constraints = {
             video: {
                 facingMode: isMobile ? 'environment' : 'user',
-                width: 640,
-                height: 480
+                width: { ideal: 640 },
+                height: { ideal: 480 }
             }
         };
 
-        // Crear webcam
-        const flip = !isMobile; // No flip en móviles (cámara trasera ya está correcta)
+        // Crear webcam (tmImage.Webcam)
+        const flip = !isMobile;
         webcam = new tmImage.Webcam(640, 480, flip);
 
-        await webcam.setup(constraints);
-        await webcam.play();
+        try {
+            // Intento normal con la API de la librería
+            console.log('initWebcam: intentando webcam.setup() con tmImage.Webcam');
+            await webcam.setup(constraints);
+            await webcam.play();
+            console.log('initWebcam: tmImage.Webcam.setup/play OK');
+        } catch (libError) {
+            // Fallback: intentar abrir la cámara directamente para diagnosticar permisos/constraints
+            console.warn('initWebcam: tmImage.Webcam.setup falló, intentando fallback getUserMedia', libError);
+            updateStatus('Intentando abrir cámara (fallback)...', 'loading');
 
-        // Mostrar canvas
-        const canvas = document.getElementById('webcam-canvas');
-        canvas.width = webcam.canvas.width;
-        canvas.height = webcam.canvas.height;
-        canvas.style.display = 'block';
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw libError; // rethrow si no hay fallback posible
+            }
 
-        let statusMessage = '🎥 Cámara activa';
-
-        if (webcamMode === 'continuous') {
-            statusMessage += ' - Muestra un objeto para clasificarlo';
-        } else {
-            statusMessage += ' - Presiona "Capturar" para analizar';
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            // Si tmImage.Webcam tiene video interno, asignarle el stream manualmente
+            if (webcam && webcam.video) {
+                webcam.video.srcObject = stream;
+                await webcam.video.play();
+                // tmImage.Webcam internamente podría requerir `webcam.update()` later; seguiremos igualmente.
+            } else {
+                // Si no, creamos un elemento <video> temporal y lo ponemos en webcam.canvas (solo para diagnóstico)
+                const videoTemp = document.createElement('video');
+                videoTemp.autoplay = true;
+                videoTemp.playsInline = true;
+                videoTemp.srcObject = stream;
+                await new Promise(res => {
+                    videoTemp.onloadedmetadata = () => {
+                        videoTemp.play();
+                        res();
+                    };
+                });
+                // crear un objeto mínimo para usar sus canvas en predictWebcam
+                webcam = { canvas: document.createElement('canvas'), video: videoTemp, update: () => {}, playing: true };
+                webcam.canvas.width = videoTemp.videoWidth || 640;
+                webcam.canvas.height = videoTemp.videoHeight || 480;
+            }
         }
 
+        // Si llegamos aquí, consideramos la webcam en play
+        isWebcamActive = true;
+        console.log('initWebcam: isWebcamActive = true');
+
+        // Mostrar canvas (de nuevo por si estuvo ausente)
+        const finalCanvas = document.getElementById('webcam-canvas');
+        if (finalCanvas && webcam && webcam.canvas) {
+            finalCanvas.width = webcam.canvas.width || 640;
+            finalCanvas.height = webcam.canvas.height || 480;
+            finalCanvas.style.display = 'block';
+        } else {
+            console.warn('initWebcam: canvas final no encontrado o webcam.canvas ausente');
+        }
+
+        let statusMessage = ' Cámara activa';
+        if (webcamMode === 'continuous') {
+            statusMessage += ' - Muestra un objeto para clasificar \n Asegurate de que el fondo sea claro';
+        } else {
+            statusMessage += ' - Presiona "Capturar" para analizar \n Asegurate de que el fondo sea claro';
+        }
         updateStatus(statusMessage, 'success');
 
-        // Iniciar predicción continua
-        predictWebcam();
-
-    } catch (error) {
-        console.error(' Error con webcam:', error);
-        let errorMsg = ' Error de cámara: ';
-
-        if (error.name === 'NotAllowedError') {
-            errorMsg += 'Permisos denegados. Permite el acceso a la cámara.';
-        } else if (error.name === 'NotFoundError') {
-            errorMsg += 'No se encontró cámara conectada.';
-        } else if (error.name === 'NotReadableError') {
-            errorMsg += 'Cámara en uso por otra aplicación.';
-        } else {
-            errorMsg += error.message;
+        // iniciar loop de predicción (no bloqueante)
+        try {
+            predictWebcam();
+        } catch (e) {
+            console.warn('initWebcam: predictWebcam lanzó excepción (no crítico)', e);
         }
 
+    } catch (error) {
+        console.error(' Error con webcam (detalle):', error);
+        let errorMsg = ' Error de cámara: ';
+        if (error && error.name) {
+            if (error.name === 'NotAllowedError') {
+                errorMsg += 'Permisos denegados. Permite el acceso a la cámara.';
+            } else if (error.name === 'NotFoundError') {
+                errorMsg += 'No se encontró cámara conectada.';
+            } else if (error.name === 'NotReadableError') {
+                errorMsg += 'Cámara en uso por otra aplicación.';
+            } else {
+                errorMsg += error.message || String(error);
+            }
+        } else {
+            errorMsg += String(error);
+        }
         updateStatus(errorMsg, 'error');
+
+        // Para depuración adicional, muestra en consola la lista de dispositivos disponibles
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                console.log('Dispositivos multimedia detectados:', devices);
+            } catch (devErr) {
+                console.warn('No se pudo enumerar dispositivos:', devErr);
+            }
+        }
     }
 }
 
 async function predictWebcam() {
-    if (webcam && model && currentMode === 'webcam' && webcamMode === 'continuous') {
+    if (webcam && currentMode === 'webcam') {
         // Actualizar webcam
         webcam.update();
 
@@ -156,13 +242,15 @@ async function predictWebcam() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(webcam.canvas, 0, 0);
 
-        // Modo individual: sistema simplificado
-        // Guardar imagen completa para feedback
-        currentImageData = canvas.toDataURL('image/jpeg', 0.8);
+        if (webcamMode === 'continuous') {
+            // Modo individual: sistema simplificado
+            // Guardar imagen completa para feedback
+            currentImageData = canvas.toDataURL('image/jpeg', 0.8);
 
-        // Hacer predicción en toda la imagen
-        const predictions = await model.predict(canvas);
-        displayPrediction(predictions);
+            // Hacer predicción en toda la imagen
+            const predictions = await model.predict(canvas);
+            displayPrediction(predictions);
+        }
 
         // Continuar el loop
         requestAnimationFrame(predictWebcam);
@@ -213,6 +301,12 @@ function setupEventListeners() {
 
 function switchMode(mode) {
     currentMode = mode;
+    // Limpiar resultados anteriores al cambiar de modo
+const resultContainer = document.getElementById('label-container');
+if (resultContainer) resultContainer.innerHTML = '';
+
+updateStatus('Listo para usar', 'info');
+
 
     // Actualizar botones
     document.querySelectorAll('.mode-btn').forEach(btn => {
@@ -236,10 +330,26 @@ function switchMode(mode) {
         if (webcam) {
             webcam.stop();
             webcam = null;
+            isWebcamActive = false;
         }
 
         document.getElementById('prediction').textContent = 'Selecciona una imagen para clasificar';
         document.getElementById('confidence').textContent = '';
+    }
+
+    // Mostrar u ocultar configuraciones específicas de webcam
+    const quickConfig = document.querySelector('.quick-config');
+    if (quickConfig) {
+        // ocultar las opciones de webcam cuando estamos en modo 'upload'
+        quickConfig.style.display = mode === 'upload' ? 'none' : '';
+    }
+
+    // Asegurar que los controles de captura estén ocultos en modo upload
+    const captureControls = document.getElementById('capture-controls');
+    if (captureControls) {
+        if (mode === 'upload') captureControls.style.display = 'none';
+        // si volvemos a webcam, respetar el modo actual (capture/continuous)
+        else captureControls.style.display = webcamMode === 'capture' ? 'block' : 'none';
     }
 }
 
@@ -298,19 +408,10 @@ function displayPrediction(predictions) {
     const label = formatLabel(topPrediction.className);
     const confidence = (topPrediction.probability * 100).toFixed(1);
 
-    // Mostrar resultado con botones de feedback
+    // Mostrar resultado
     const predictionDiv = document.getElementById('prediction');
-    predictionDiv.innerHTML = `
-        <div class="prediction-result">${label}</div>
-        <div class="feedback-buttons">
-            <button class="feedback-btn correct-btn" onclick="provideFeedback(true, '${label}', ${confidence})">✅ Correcto</button>
-            <button class="feedback-btn incorrect-btn" onclick="provideFeedback(false, '${label}', ${confidence})">❌ Incorrecto</button>
-        </div>
-    `;
+    predictionDiv.innerHTML = `<div class="prediction-result">${label}</div>`;
     document.getElementById('confidence').textContent = `Confianza: ${confidence}%`;
-
-    // Guardar en historial
-    saveToHistory(label, confidence, topPrediction.className);
 
     console.log('Predicción:', label, `(${confidence}%)`);
 }
@@ -326,7 +427,7 @@ function formatLabel(className) {
         return 'Botella - Reciclable';
     } else if (label.includes('galgería')){
         return 'Galgería - Reciclable';
-    }   return `Esto no deberia aparecer, solo el nombre de la clase interna, osea: ${className}`;
+    }   return `${className}`;
         }
 
     
@@ -390,7 +491,7 @@ function showSection(sectionName) {
 
 function updatePageTitle(sectionName) {
     const titles = {
-        'main': '♻️ Clasificador de Basura IA',
+        'home': '♻️ Clasificador de Basura IA',
         'history': '📊 Historial de Clasificaciones',
         'charts': '📈 Estadísticas',
         'training': '🧠 Dataset de Entrenamiento'
@@ -449,404 +550,6 @@ async function captureAndClassify() {
         console.error('Error en captura y clasificación:', error);
         updateStatus('❌ Error al procesar imagen', 'error');
     }
+    
 }
-
-// Funciones para el modal de ayuda
-function showHelp() {
-    const modal = document.getElementById('help-modal');
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden'; // Prevenir scroll
-}
-
-function hideHelp() {
-    const modal = document.getElementById('help-modal');
-    modal.classList.remove('show');
-    document.body.style.overflow = 'auto'; // Restaurar scroll
-}
-
-// Cerrar modal al hacer clic fuera
-document.addEventListener('click', (event) => {
-    const modal = document.getElementById('help-modal');
-    if (event.target === modal) {
-        hideHelp();
-    }
-});
-
-// Cerrar modal con tecla Escape
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-        hideHelp();
-    }
-});
-
-// Funciones para el historial
-function saveToHistory(label, confidence, originalClass) {
-    const historyItem = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        label: label,
-        confidence: parseFloat(confidence),
-        originalClass: originalClass,
-        category: getCategoryFromLabel(label)
-    };
-
-    classificationHistory.unshift(historyItem); // Agregar al inicio
-
-    // Limitar a 50 elementos para no sobrecargar
-    if (classificationHistory.length > 50) {
-        classificationHistory = classificationHistory.slice(0, 50);
-    }
-
-    // Guardar en localStorage
-    localStorage.setItem('classificationHistory', JSON.stringify(classificationHistory));
-
-    // Actualizar display
-    updateHistoryDisplay();
-    updateCharts();
-}
-
-function loadHistory() {
-    const saved = localStorage.getItem('classificationHistory');
-    if (saved) {
-        classificationHistory = JSON.parse(saved);
-        updateHistoryDisplay();
-    }
-}
-
-function updateHistoryDisplay() {
-    const historyList = document.getElementById('history-list');
-
-    if (classificationHistory.length === 0) {
-        historyList.innerHTML = '<p class="no-history">No hay clasificaciones aún</p>';
-        return;
-    }
-
-    const historyHTML = classificationHistory.map(item => {
-        const time = new Date(item.timestamp).toLocaleString();
-        return `
-            <div class="history-item ${item.category.toLowerCase().replace(' ', '-')}" data-id="${item.id}">
-                <div class="history-item-header">
-                    <div class="history-item-result">${item.label}</div>
-                    <div class="history-item-time">${time}</div>
-                </div>
-                <div class="history-item-confidence">Confianza: ${item.confidence}%</div>
-            </div>
-        `;
-    }).join('');
-
-    historyList.innerHTML = historyHTML;
-
-    // Actualizar gráficas
-    updateCharts();
-}
-
-function clearHistory() {
-    if (confirm('¿Estás seguro de que quieres limpiar todo el historial?')) {
-        classificationHistory = [];
-        localStorage.removeItem('classificationHistory');
-        updateHistoryDisplay();
-    }
-}
-
-function exportHistory() {
-    if (classificationHistory.length === 0) {
-        alert('No hay datos para exportar');
-        return;
-    }
-
-    const dataStr = JSON.stringify(classificationHistory, null, 2);
-    const dataBlob = new Blob([dataStr], {type: 'application/json'});
-
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(dataBlob);
-    link.download = `clasificaciones_basura_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-function getCategoryFromLabel(label) {
-    if (label.includes('organico')) return 'organic';
-    if (label.includes('reciclable')) return 'recyclable';
-    if (label.includes('no reciclable')) return 'non-recyclable';
-    return 'unknown';
-}
-
-// Funciones para gráficas
-function updateCharts() {
-    if (typeof Chart === 'undefined') {
-        console.warn('Chart.js no está cargado');
-        return;
-    }
-
-    updateCategoryChart();
-    updateDailyChart();
-    updateStatsSummary();
-}
-
-function updateCategoryChart() {
-    const ctx = document.getElementById('categoryChart');
-    if (!ctx) return;
-
-    // Contar clasificaciones por categoría
-    const categoryCounts = {
-        '🍌 Orgánico': 0,
-        '♻️ Reciclable': 0,
-        '🚫 No Reciclable': 0
-    };
-
-    classificationHistory.forEach(item => {
-        if (item.label.includes('🍌')) categoryCounts['🍌 Orgánico']++;
-        else if (item.label.includes('♻️')) categoryCounts['♻️ Reciclable']++;
-        else if (item.label.includes('🚫')) categoryCounts['🚫 No Reciclable']++;
-    });
-
-    const data = {
-        labels: Object.keys(categoryCounts),
-        datasets: [{
-            data: Object.values(categoryCounts),
-            backgroundColor: [
-                '#28a745', // Verde para orgánico
-                '#17a2b8', // Azul para reciclable
-                '#dc3545'  // Rojo para no reciclable
-            ],
-            borderWidth: 2,
-            borderColor: '#ffffff'
-        }]
-    };
-
-    if (categoryChart) {
-        categoryChart.data = data;
-        categoryChart.update();
-    } else {
-        categoryChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: data,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-    }
-}
-
-function updateDailyChart() {
-    const ctx = document.getElementById('dailyChart');
-    if (!ctx) return;
-
-    // Contar clasificaciones por día (últimos 7 días)
-    const dailyCounts = {};
-    const today = new Date();
-
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateKey = date.toISOString().split('T')[0];
-        dailyCounts[dateKey] = 0;
-    }
-
-    classificationHistory.forEach(item => {
-        const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
-        if (dailyCounts.hasOwnProperty(itemDate)) {
-            dailyCounts[itemDate]++;
-        }
-    });
-
-    const data = {
-        labels: Object.keys(dailyCounts).map(date => {
-            const d = new Date(date);
-            return d.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
-        }),
-        datasets: [{
-            label: 'Clasificaciones',
-            data: Object.values(dailyCounts),
-            backgroundColor: 'rgba(0, 123, 255, 0.5)',
-            borderColor: 'rgba(0, 123, 255, 1)',
-            borderWidth: 2,
-            fill: true
-        }]
-    };
-
-    if (dailyChart) {
-        dailyChart.data = data;
-        dailyChart.update();
-    } else {
-        dailyChart = new Chart(ctx, {
-            type: 'line',
-            data: data,
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-    }
-}
-
-function updateStatsSummary() {
-    if (classificationHistory.length === 0) {
-        document.getElementById('total-classifications').textContent = '0';
-        document.getElementById('avg-confidence').textContent = '0%';
-        document.getElementById('most-common').textContent = '-';
-        return;
-    }
-
-    // Total de clasificaciones
-    document.getElementById('total-classifications').textContent = classificationHistory.length;
-
-    // Confianza promedio
-    const avgConfidence = classificationHistory.reduce((sum, item) => sum + item.confidence, 0) / classificationHistory.length;
-    document.getElementById('avg-confidence').textContent = avgConfidence.toFixed(1) + '%';
-
-    // Categoría más común
-    const categoryCounts = {};
-    classificationHistory.forEach(item => {
-        const category = getCategoryFromLabel(item.label);
-        categoryCounts[category] = (categoryCounts[category] || 0) + 1;
-    });
-
-    const mostCommon = Object.entries(categoryCounts).reduce((a, b) => a[1] > b[1] ? a : b)[0];
-    const categoryNames = {
-        'organic': '🍌 Orgánico',
-        'recyclable': '♻️ Reciclable',
-        'non-recyclable': '🚫 No Reciclable'
-    };
-
-    document.getElementById('most-common').textContent = categoryNames[mostCommon] || mostCommon;
-}
-
-// Funciones para recopilación de datos
-function provideFeedback(isCorrect, predictedLabel, confidence) {
-    if (!currentImageData) {
-        alert('No hay imagen disponible para guardar');
-        return;
-    }
-
-    if (isCorrect) {
-        // Agregar al dataset de entrenamiento
-        const trainingSample = {
-            id: Date.now(),
-            imageData: currentImageData,
-            label: predictedLabel,
-            confidence: confidence,
-            timestamp: new Date().toISOString(),
-            category: getCategoryFromLabel(predictedLabel)
-        };
-
-        trainingDataset.push(trainingSample);
-
-        // Guardar en localStorage
-        localStorage.setItem('trainingDataset', JSON.stringify(trainingDataset));
-
-        // Actualizar estadísticas
-        updateTrainingStats();
-
-        // Mostrar confirmación
-        showFeedbackMessage('✅ Imagen guardada para reentrenamiento', 'success');
-        console.log('Imagen guardada para dataset de entrenamiento');
-    } else {
-        // Solo actualizar historial, no guardar para entrenamiento
-        showFeedbackMessage('❌ Clasificación incorrecta registrada', 'error');
-    }
-
-    // Limpiar imagen actual
-    currentImageData = null;
-
-    // Ocultar botones de feedback después de 2 segundos
-    setTimeout(() => {
-        document.getElementById('prediction').textContent = 'Esperando nueva clasificación...';
-        document.getElementById('confidence').textContent = '';
-    }, 2000);
-}
-
-function showFeedbackMessage(message, type) {
-    const predictionDiv = document.getElementById('prediction');
-    predictionDiv.innerHTML = `<div class="feedback-message ${type}">${message}</div>`;
-}
-
-function loadTrainingDataset() {
-    const saved = localStorage.getItem('trainingDataset');
-    if (saved) {
-        trainingDataset = JSON.parse(saved);
-        console.log(`Cargado dataset de entrenamiento: ${trainingDataset.length} muestras`);
-        updateTrainingStats();
-    }
-}
-
-function exportTrainingDataset() {
-    if (trainingDataset.length === 0) {
-        alert('No hay datos de entrenamiento para exportar');
-        return;
-    }
-
-    // Crear archivo ZIP con imágenes y metadatos
-    const zip = new JSZip();
-    const metadata = [];
-
-    trainingDataset.forEach((sample, index) => {
-        // Agregar imagen al ZIP
-        const imageData = sample.imageData.split(',')[1]; // Remover data URL prefix
-        zip.file(`sample_${index}.jpg`, imageData, {base64: true});
-
-        // Agregar metadatos
-        metadata.push({
-            filename: `sample_${index}.jpg`,
-            label: sample.label,
-            category: sample.category,
-            confidence: sample.confidence,
-            timestamp: sample.timestamp
-        });
-    });
-
-    // Agregar archivo de metadatos
-    zip.file('metadata.json', JSON.stringify(metadata, null, 2));
-
-    // Generar y descargar ZIP
-    zip.generateAsync({type: 'blob'}).then(content => {
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
-        link.download = `dataset_entrenamiento_${new Date().toISOString().split('T')[0]}.zip`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
-}
-
-function clearTrainingDataset() {
-    if (confirm('¿Estás seguro de que quieres eliminar todo el dataset de entrenamiento?')) {
-        trainingDataset = [];
-        localStorage.removeItem('trainingDataset');
-        console.log('Dataset de entrenamiento eliminado');
-    }
-}
-
-// Agregar JSZip para crear archivos ZIP
-document.head.insertAdjacentHTML('beforeend', '<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>');
-
-function updateTrainingStats() {
-    // Actualizar número de imágenes
-    document.getElementById('dataset-size').textContent = trainingDataset.length;
-
-    // Calcular precisión promedio
-    if (trainingDataset.length > 0) {
-        const avgAccuracy = trainingDataset.reduce((sum, item) => sum + item.confidence, 0) / trainingDataset.length;
-        document.getElementById('dataset-accuracy').textContent = avgAccuracy.toFixed(1) + '%';
-    } else {
-        document.getElementById('dataset-accuracy').textContent = '0%';
-    }
-}
+window.addEventListener('DOMContentLoaded', initApp);
