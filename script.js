@@ -119,15 +119,58 @@ async function initWebcam() {
             await new Promise(res => setTimeout(res, 150));
         }
 
-        // Detectar si es móvil para usar cámara trasera
+        // Detectar si es móvil para preferir cámara trasera
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const constraints = {
+
+        // Construir constraints iniciales
+        let constraints = {
             video: {
-                facingMode: isMobile ? 'environment' : 'user',
                 width: { ideal: 640 },
                 height: { ideal: 480 }
             }
         };
+
+        // Intentar seleccionar deviceId de cámara trasera en móviles cuando sea posible
+        let selectedDeviceId = null;
+        if (isMobile && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            try {
+                // Intentar enumerar dispositivos (las labels pueden estar vacías sin permiso)
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoInputs = devices.filter(d => d.kind === 'videoinput');
+
+                // Buscar por etiquetas comunes de cámara trasera
+                const rearRegex = /back|rear|traser|trasera|environment|camara trasera/i;
+                const found = videoInputs.find(d => d.label && rearRegex.test(d.label));
+                if (found) {
+                    selectedDeviceId = found.deviceId;
+                    console.log('initWebcam: cámara trasera detectada por label:', found.label);
+                } else {
+                    // Si no hay label, solicitar permiso usando facingMode: 'environment' para forzar la trasera y obtener deviceId
+                    try {
+                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: 640, height: 480 } });
+                        const track = tempStream.getVideoTracks()[0];
+                        const settings = track.getSettings && track.getSettings();
+                        if (settings && settings.deviceId) {
+                            selectedDeviceId = settings.deviceId;
+                            console.log('initWebcam: obtuvo deviceId tras permiso:', selectedDeviceId);
+                        }
+                        // detener stream temporal
+                        track.stop();
+                    } catch (permErr) {
+                        console.warn('initWebcam: no se pudo obtener permiso inicial con facingMode=environment:', permErr);
+                    }
+                }
+            } catch (enumErr) {
+                console.warn('initWebcam: enumerateDevices falló:', enumErr);
+            }
+        }
+
+        if (selectedDeviceId) {
+            constraints.video.deviceId = { exact: selectedDeviceId };
+        } else {
+            // fallback a facingMode (funciona en la mayoría de móviles)
+            constraints.video.facingMode = isMobile ? 'environment' : 'user';
+        }
 
         // Crear webcam (tmImage.Webcam)
         const flip = !isMobile;
