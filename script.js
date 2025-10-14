@@ -450,6 +450,7 @@ function renderTopPrediction(topPrediction) {
     const typeClass = wasteInfo.type === 'reciclable' ? 'reciclable' :
         wasteInfo.type === 'organico' ? 'organico' :
             wasteInfo.type === 'merma' ? 'merma' : 'no-reciclable';
+    const infoAvailable = wasteInfo.type !== 'info';
 
     const predictionDiv = document.getElementById('prediction');
     predictionDiv.innerHTML = '';
@@ -499,6 +500,9 @@ function formatLabel(className) {
     if (label.includes('huevo')) return 'Huevo (cáscara)';
     if (label.includes('piña') || label.includes('pina')) return 'Piña';
     if (label.includes('merma') || label.includes('basura')) return 'Merma / Basura';
+    if (label.includes('papaya') || label.includes('papaya')) return 'Papaya';
+    if (label.includes('tomate')) return 'tomate';
+    if (label.includes('no hay nada')) return 'No hay nada';
 
     return `${className}`;
 }
@@ -904,8 +908,13 @@ const recyclingInfo = {
             'Aporta humedad y nutrientes esenciales',
             'Ideal combinar con cartón seco para equilibrar la mezcla'
         ]
+    },
+    "no hay nada" : {
+        type: 'info',
+        title: 'Información de Reciclaje',
+        description: 'Coloca el objeto frente a la cámara o sube una imagen para obtener instrucciones específicas de reciclaje. Mientras esperas, aquí tienes información práctica de reciclaje universal:',
     }
-}
+};
 
 function getWasteType(label) {
     const normalizedLabel = label.toLowerCase().trim();
@@ -930,6 +939,7 @@ function getWasteType(label) {
             'Toma una foto más clara para mejor identificación'
         ]
     };
+
 }
 function toggleRecyclingInfo() {
     const recyclingContent = document.getElementById('recycling-content');
