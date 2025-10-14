@@ -8,7 +8,7 @@ let currentView = 'home';
 let isModalOpen = false;
 let lastTopPrediction = null;
 // Preferencia de cámara: 'environment' (trasera) o 'user' (frontal). Se puede cambiar desde la UI.
-let preferredFacing = 'environment';
+let preferredFacing = 'environment'; // Por defecto usar cámara trasera
 
 async function initApp() {
     console.log(' Iniciando Clasificador de Basura');
@@ -100,15 +100,15 @@ async function initWebcam() {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter(d => d.kind === 'videoinput');
 
-    // Buscar una cámara trasera por nombre
+    // Buscar una cámara trasera por nombre (expanded regex para mejor detección)
     let backCamera = videoDevices.find(d =>
-        /back|rear|environment/i.test(d.label)
+        /back|rear|environment|main|primary|trasera|traser/i.test(d.label)
     );
 
     // Si no hay etiqueta (antes de permisos), intentar environment
     let constraints = backCamera
-        ? { video: { deviceId: { exact: backCamera.deviceId } } }
-        : { video: { facingMode: { ideal: "environment" } } };
+        ? { video: { deviceId: { exact: backCamera.deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } } }
+        : { video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } } };
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
