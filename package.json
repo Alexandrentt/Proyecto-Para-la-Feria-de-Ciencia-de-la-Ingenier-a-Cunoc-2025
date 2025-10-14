@@ -1,0 +1,30 @@
+{
+  "name": "sarb-sistema-reconocimiento-basura",
+  "version": "1.0.0",
+  "description": "Sistema Automático de Reconocimiento de Basura - Clasificación de residuos usando IA",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx http-server . -p 3000 -c-1 --cors",
+    "dev": "npx http-server . -p 3000 -c-1 --cors -o",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "echo 'Deploying to production...'"
+  },
+  "keywords": [
+    "reciclaje",
+    "basura",
+    "clasificacion",
+    "tensorflow",
+    "teachable-machine",
+    "ia",
+    "webcam",
+    "sostenibilidad"
+  ],
+  "author": "Proyecto Feria de Ciencia Ingeniería 2025",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
