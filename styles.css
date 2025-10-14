@@ -1182,12 +1182,21 @@ input:checked + .slider:before {
     display: none !important;
 }
 
+/* Ocultar etiqueta y selector de cámara completos en escritorio */
+.camera-config {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .camera-options {
         display: grid !important;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
         justify-items: center;
+    }
+    /* Mostrar el bloque completo de cámara en móviles */
+    .camera-config {
+        display: block;
     }
     
     .recycling-content.show {
@@ -1226,6 +1235,21 @@ input:checked + .slider:before {
 @media (max-width: 480px) {
     .prediction {
         gap: 8px;
+    }
+
+    /* Badge para indicar confianza baja / etiqueta desconocida */
+    .unknown-badge {
+        margin-top: 10px;
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-align: center;
+        max-width: 520px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .prediction-result {

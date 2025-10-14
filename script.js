@@ -554,11 +554,32 @@ function renderTopPrediction(topPrediction) {
     typeEl.className = `waste-type-label ${typeClass}`;
     typeEl.textContent = typeLabel;
 
-    predictionDiv.appendChild(resultEl);
-    predictionDiv.appendChild(typeEl);
-    
-    // Actualizar el contenido del menú desplegable automáticamente
-    updateRecyclingInfo(topPrediction.className);
+    // Mostrar resultado solo si la confianza alcanza el umbral
+    const confidenceNum = parseFloat(confidence);
+    if (!isNaN(confidenceNum) && confidenceNum >= 90) {
+        // Confianza suficiente: mostrar etiqueta, tipo y botón de información
+        predictionDiv.appendChild(resultEl);
+        predictionDiv.appendChild(typeEl);
+
+        const infoBtn = document.createElement('button');
+        infoBtn.className = 'info-btn';
+        infoBtn.classList.add('custom-highlight');
+        infoBtn.textContent = 'Información';
+        infoBtn.addEventListener('click', () => showRecyclingInfo(topPrediction.className));
+
+        if (typeof webcamMode === 'undefined' || webcamMode === 'capture' || currentMode === 'upload') {
+            predictionDiv.appendChild(infoBtn);
+        }
+
+        // Actualizar el contenido del menú desplegable automáticamente (solo con confianza alta)
+        updateRecyclingInfo(topPrediction.className);
+    } else {
+        // Confianza baja: mostrar aviso de desconocido, no mostrar clasificación
+        const unknownBadge = document.createElement('div');
+        unknownBadge.className = 'unknown-badge';
+        unknownBadge.textContent = 'El modelo no fue entrenado para reconocer este objeto en específico.';
+        predictionDiv.appendChild(unknownBadge);
+    }
 
     const confEl = document.getElementById('confidence');
     if (confEl) confEl.textContent = `Confianza: ${confidence}%`;
@@ -660,15 +681,11 @@ function updatePageTitle(sectionName) {
     }
 }
 
-// Función setScanMode eliminada - solo modo individual
-
 function setWebcamMode(mode) {
     webcamMode = mode;
 
-    // Limpiar resultados al cambiar de modo webcam
     clearResults();
     
-    // Ocultar menú desplegable de información si está abierto
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
     if (recyclingContent) recyclingContent.classList.remove('show');
@@ -923,7 +940,6 @@ const recyclingInfo = {
             'Excelente para compostaje doméstico'
         ]
     },
-    /* segunda definición de 'pizza' eliminada (ya existe más arriba con la información correcta sobre la caja de pizza) */
     'shakalaka': {
         type: 'no-reciclable',
         title: 'Objeto Desconocido',
@@ -969,8 +985,6 @@ function getWasteType(label) {
         ]
     };
 }
-
-// Función para alternar el menú desplegable de información de reciclaje
 function toggleRecyclingInfo() {
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
@@ -1002,15 +1016,27 @@ function updateRecyclingInfo(label) {
                              wasteInfo.type === 'organico' ? '🌱 Orgánico' : '❌ No Reciclable';
     typeElement.className = `info-type-badge ${wasteInfo.type}`;
 
-    // Instrucciones y tips
-    const instructionsContainer = document.getElementById('info-instructions');
-    instructionsContainer.innerHTML = wasteInfo.instructions.map(instruction => `<li>${instruction}</li>`).join('');
 
+    const instructionsContainer = document.getElementById('info-instructions');
     const tipsContainer = document.getElementById('info-tips');
-    tipsContainer.innerHTML = wasteInfo.tips.map(tip => `<li>${tip}</li>`).join('');
+
+    if (instructionsContainer) {
+        if (Array.isArray(wasteInfo.instructions) && wasteInfo.instructions.length > 0) {
+            instructionsContainer.innerHTML = '<ul>' + wasteInfo.instructions.map(i => `<li>${i}</li>`).join('') + '</ul>';
+        } else {
+            instructionsContainer.innerHTML = '<p>No hay instrucciones específicas para este objeto. Consulta las normas locales.</p>';
+        }
+    }
+
+    if (tipsContainer) {
+        if (Array.isArray(wasteInfo.tips) && wasteInfo.tips.length > 0) {
+            tipsContainer.innerHTML = '<ul>' + wasteInfo.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
+        } else {
+            tipsContainer.innerHTML = '<p>No hay consejos adicionales disponibles.</p>';
+        }
+    }
 }
 
-// Función para limpiar los resultados de clasificación
 function clearResults() {
     const pred = document.getElementById('prediction');
     const conf = document.getElementById('confidence');
@@ -1020,7 +1046,6 @@ function clearResults() {
     
     lastTopPrediction = null;
     
-    // Ocultar menú desplegable de información
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
     if (recyclingContent) recyclingContent.classList.remove('show');
