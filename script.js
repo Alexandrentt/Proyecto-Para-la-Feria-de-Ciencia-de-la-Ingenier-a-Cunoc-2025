@@ -1,3 +1,4 @@
+
 const MODEL_URL = './my_model/';
 let model, webcam, currentMode = 'webcam';
 let isWebcamActive = false; // indica si la webcam ya está inicializada y en play
@@ -397,29 +398,46 @@ function setCameraFacing(facing) {
 }
 
 async function predictWebcam() {
-    if (webcam && currentMode === 'webcam') {
-        // Actualizar webcam
-        webcam.update();
+    if (!webcam || currentMode !== 'webcam') return;
 
-        // Copiar frame al canvas visible
-        const canvas = document.getElementById('webcam-canvas');
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(webcam.canvas, 0, 0);
+    // Actualizar webcam si la función existe
+    if (webcam.update) webcam.update();
 
-        if (webcamMode === 'continuous') {
-            // Modo individual: sistema simplificado
-            // Guardar imagen completa para feedback
-            currentImageData = canvas.toDataURL('image/jpeg', 0.8);
+    // Obtener canvas y contexto
+    const canvas = document.getElementById('webcam-canvas');
+    const ctx = canvas.getContext('2d');
 
-            // Hacer predicción en toda la imagen
+    // Elegir fuente: video si existe, sino canvas interno
+    const source = webcam.video || webcam.canvas;
+    if (!source) {
+        console.warn('predictWebcam: no hay fuente de video/canvas disponible aún');
+        requestAnimationFrame(predictWebcam);
+        return;
+    }
+
+    // Ajustar tamaño del canvas al del video
+    canvas.width = source.videoWidth || source.width || 640;
+    canvas.height = source.videoHeight || source.height || 480;
+
+    // Dibujar el frame en el canvas visible
+    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+
+    // Guardar imagen y predecir
+    if (webcamMode === 'continuous' && isModelLoaded) {
+        currentImageData = canvas.toDataURL('image/jpeg', 0.8);
+
+        try {
             const predictions = await model.predict(canvas);
             displayPrediction(predictions);
+        } catch (err) {
+            console.warn('predictWebcam: error en predict:', err);
         }
-
-        // Continuar el loop
-        requestAnimationFrame(predictWebcam);
     }
+
+    // Continuar el loop
+    requestAnimationFrame(predictWebcam);
 }
+
 
 function setupEventListeners() {
 
@@ -452,15 +470,14 @@ function setupEventListeners() {
         }
     });
 
-    // Event listener para canvas eliminado - no necesario en modo individual
 
-    // Cerrar menú al hacer clic fuera
     document.addEventListener('click', (e) => {
         const menu = document.getElementById('dropdown-menu');
-        if (!menu.contains(e.target)) {
+        if (menu && !menu.contains(e.target)) {
             menu.classList.remove('show');
         }
     });
+    
 }
 
 function switchMode(mode) {
@@ -1063,7 +1080,6 @@ function toggleRecyclingInfo() {
         toggleBtn.classList.remove('active');
     } else {
 
-        // Si hay una última predicción válida, mostrar su información; si no, mostrar guía general de reciclaje
         const labelToShow = lastTopPrediction && lastTopPrediction.className ? lastTopPrediction.className : null;
         updateRecyclingInfo(labelToShow);
         recyclingContent.classList.add('show');
