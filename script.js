@@ -503,9 +503,11 @@ function renderTopPrediction(topPrediction) {
 
     const wasteInfo = getWasteType(topPrediction.className);
     const typeLabel = wasteInfo.type === 'reciclable' ? '♻️ Reciclable' :
-                     wasteInfo.type === 'organico' ? '📦 Merma' : '❌ No Reciclable';
+                     wasteInfo.type === 'organico' ? '🌱 Orgánico' :
+                     wasteInfo.type === 'merma' ? '🗑️ Merma' : '❌ No Reciclable';
     const typeClass = wasteInfo.type === 'reciclable' ? 'reciclable' :
-                     wasteInfo.type === 'organico' ? 'merma' : 'no-reciclable';
+                     wasteInfo.type === 'organico' ? 'organico' :
+                     wasteInfo.type === 'merma' ? 'merma' : 'no-reciclable';
 
     const predictionDiv = document.getElementById('prediction');
     predictionDiv.innerHTML = '';
@@ -562,6 +564,7 @@ function formatLabel(className) {
     if (label.includes('limon') || label.includes('limón')) return 'Limón';
     if (label.includes('huevo')) return 'Huevo (cáscara)';
     if (label.includes('piña') || label.includes('pina')) return 'Piña';
+    if (label.includes('merma') || label.includes('basura')) return 'Merma / Basura';
 
     // Fallback: retornar como vino
     return `${className}`;
@@ -899,7 +902,26 @@ const recyclingInfo = {
         'Reutiliza cajas cuando sea posible antes de reciclarlas',
         'Evita mezclar papel con residuos orgánicos o plásticos'
     ]
-}
+},
+    'merma': {
+        type: 'merma',
+        title: 'Merma / Basura',
+        description: 'Objetos que han llegado al final de su vida útil y no pueden ser reciclados, reutilizados o compostados. Son residuos que deben ir al contenedor de rechazo.',
+        instructions: [
+            'Deposítalo en el contenedor gris de rechazo',
+            'Asegúrate de que no contenga materiales peligrosos',
+            'Si es un objeto grande, consulta con el servicio de recolección especial',
+            'No lo quemes ni lo tires en la naturaleza',
+            'Si contiene datos personales (documentos, discos), destrúyelos antes de desechar'
+        ],
+        tips: [
+            'Antes de desechar, considera si realmente no se puede reparar o reutilizar',
+            'Los objetos de merma van a vertederos controlados donde se manejan de forma segura',
+            'Evita generar merma innecesaria: compra solo lo que necesites',
+            'Si el objeto es muy grande, llévalo a un punto limpio o solicita recogida especial',
+            'Los residuos peligrosos (pilas, medicamentos, aceites) van a puntos limpios, no al contenedor gris'
+        ]
+    }
 };
 
 // Función para determinar el tipo de basura según la etiqueta
@@ -986,6 +1008,8 @@ function updateRecyclingInfo(label) {
             typeElement.textContent = '♻️ Reciclable';
         } else if (wasteInfo.type === 'organico') {
             typeElement.textContent = '🌱 Orgánico';
+        } else if (wasteInfo.type === 'merma') {
+            typeElement.textContent = '🗑️ Merma';
         } else if (wasteInfo.type === 'info') {
             typeElement.textContent = 'ℹ️ Información';
         } else {
