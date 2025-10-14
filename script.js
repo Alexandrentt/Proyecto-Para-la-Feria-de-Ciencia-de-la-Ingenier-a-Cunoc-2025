@@ -525,15 +525,7 @@ function renderTopPrediction(topPrediction) {
         predictionDiv.appendChild(resultEl);
         predictionDiv.appendChild(typeEl);
 
-        // Solo mostrar botón de información en modo webcam con captura
-        if (currentMode === 'webcam' && webcamMode === 'capture') {
-            const infoBtn = document.createElement('button');
-            infoBtn.className = 'info-btn';
-            infoBtn.classList.add('custom-highlight');
-            infoBtn.textContent = 'Información';
-            infoBtn.addEventListener('click', () => showRecyclingInfo(topPrediction.className));
-            predictionDiv.appendChild(infoBtn);
-        }
+        // Botón de información eliminado - solo usar menú desplegable
 
         // Actualizar el contenido del menú desplegable automáticamente (solo con confianza alta)
         updateRecyclingInfo(topPrediction.className);
@@ -962,8 +954,8 @@ function updateRecyclingInfo(label) {
         // Contenido por defecto cuando no hay predicción: guía básica de reciclaje
         wasteInfo = {
             type: 'info',
-            title: 'Esperando clasificación',
-            description: 'Coloca el objeto frente a la cámara o sube una imagen para obtener instrucciones específicas de reciclaje. Mientras esperas, aquí tienes una guía práctica de reciclaje universal:',
+            title: 'Información de Reciclaje',
+            description: 'Coloca el objeto frente a la cámara o sube una imagen para obtener instrucciones específicas de reciclaje. Mientras esperas, aquí tienes información práctica de reciclaje universal:',
             instructions: [
                 'Separa los residuos por tipo: papel/cartón, plástico, vidrio, metal, orgánico y resto.',
                 'Limpia los envases (vacía y enjuaga) para evitar contaminación.',
@@ -995,7 +987,7 @@ function updateRecyclingInfo(label) {
         } else if (wasteInfo.type === 'organico') {
             typeElement.textContent = '🌱 Orgánico';
         } else if (wasteInfo.type === 'info') {
-            typeElement.textContent = 'ℹ️ Guía';
+            typeElement.textContent = 'ℹ️ Información';
         } else {
             typeElement.textContent = '❌ No Reciclable';
         }

@@ -1151,36 +1151,7 @@ input:checked + .slider:before {
     color: white;
 }
 
-.info-btn {
-    background: linear-gradient(45deg, #007bff, #6610f2);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    /* padding y tamaño de fuente adaptativos */
-    padding: clamp(10px, 2.2vw, 14px) clamp(14px, 3vw, 20px);
-    font-size: clamp(0.9rem, 1.8vw, 1.05rem);
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 10px;
-    box-shadow: 0 3px 10px rgba(0, 123, 255, 0.3);
-}
-
-.info-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
-}
-
-.info-btn:active {
-    transform: translateY(0);
-}
-
-/* Estilo adicional para botón de info en móvil (más grande) */
-.info-btn.custom-highlight {
-    border: 2px solid rgba(255,255,255,0.12);
-    box-shadow: 0 8px 30px rgba(102,16,242,0.18);
-    transform: translateY(0);
-}
+/* Estilos del botón de información eliminados - solo usar menú desplegable */
 
 /* Ocultar selector de cámaras y su label en escritorio; mostrar solo en móviles */
 .camera-config {
@@ -1227,13 +1198,7 @@ input:checked + .slider:before {
         min-width: 110px;
     }
 
-    .info-btn {
-        padding: 12px 18px;
-        font-size: clamp(0.95rem, 3.8vw, 1.05rem);
-        width: 100%;
-        max-width: 420px; /* permitir botones más grandes en móviles grandes */
-        box-sizing: border-box;
-    }
+    /* Estilos del botón de información eliminados */
 }
 
 /* Ajustes para el área de resultados: asegurar que el botón de clasificar también sea responsivo */
@@ -1252,7 +1217,7 @@ input:checked + .slider:before {
         padding: 10px 12px;
     }
 
-    .info-btn, .classify-btn {
+    .classify-btn {
         width: 100%;
         max-width: none;
         padding: 14px 18px;
