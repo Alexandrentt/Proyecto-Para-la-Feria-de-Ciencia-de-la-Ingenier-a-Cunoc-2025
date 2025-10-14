@@ -602,290 +602,311 @@ const recyclingInfo = {
     'lata': {
         type: 'reciclable',
         title: 'Lata de Aluminio',
-        description: 'Las latas de aluminio son envases metálicos que contienen bebidas, alimentos u otros productos.',
+        description: 'Las latas de aluminio se utilizan para envasar bebidas y alimentos. Son uno de los materiales más valiosos y eficientes en el reciclaje: pueden reprocesarse infinitas veces sin perder calidad ni propiedades. Su reciclaje reduce notablemente la extracción de minerales y el consumo energético.',
         instructions: [
-            'Aplasta la lata para reducir su volumen',
-            'Limpia cualquier residuo de comida o bebida',
+            'Aplasta la lata para reducir su volumen y facilitar el transporte',
+            'Limpia cualquier residuo de bebida o alimento antes de desecharla',
             'Deposítala en el contenedor amarillo destinado a envases metálicos',
-            'No es necesario quitar las etiquetas de papel'
+            'No es necesario retirar las etiquetas o tapas adheridas'
         ],
         tips: [
-            'Las latas se reciclan infinitamente sin perder calidad',
-            'El reciclaje de una sola lata ahorra energía suficiente para alimentar un televisor durante 3 horas',
-            'Separa las latas de otros metales como el acero'
+            'El aluminio reciclado conserva el 100% de su calidad original',
+            'Reciclar una sola lata ahorra suficiente energía para mantener un televisor encendido durante 3 horas',
+            'Separa las latas de aluminio de los metales ferrosos como el acero, que se reciclan por separado',
+            'Guarda las latas limpias en una bolsa aparte para facilitar su entrega en puntos de acopio'
         ]
     },
+
     'botella': {
         type: 'reciclable',
-        title: 'Botella de Plástico',
-        description: 'Las botellas de plástico PET son envases comunes para bebidas, productos de limpieza y otros líquidos.',
+        title: 'Botella de Plástico (PET)',
+        description: 'Las botellas de plástico PET son los envases más comunes para bebidas, productos de limpieza y otros líquidos. Son ligeras, resistentes y completamente reciclables si se encuentran limpias y secas. El PET reciclado se usa en textiles, mobiliario y nuevas botellas.',
         instructions: [
             'Vacía completamente el contenido de la botella',
-            'Enjuaga con agua para eliminar residuos',
-            'Aplasta la botella para reducir espacio',
+            'Enjuaga con poca agua para eliminar residuos',
+            'Aplasta la botella para ahorrar espacio en el contenedor',
             'Deposítala en el contenedor amarillo de plásticos',
-            'Quítale el tapón y deposítalo en el mismo contenedor'
+            'Retira el tapón y recíclalo en el mismo contenedor'
         ],
         tips: [
-            'El plástico PET se puede reciclar múltiples veces',
-            'Una botella reciclada puede convertirse en fibra textil, muebles de jardín o nuevas botellas',
-            'No mezcles botellas PET con otros tipos de plástico'
+            'El PET puede reciclarse varias veces, pero se degrada con el calor y la suciedad',
+            'Una botella reciclada puede convertirse en fibra textil o mobiliario urbano',
+            'Evita mezclar botellas PET con otros tipos de plástico como PVC o HDPE',
+            'Reutiliza las botellas solo temporalmente y no para almacenar líquidos calientes'
         ]
     },
+
     'botella de vidrio': {
         type: 'reciclable',
         title: 'Botella de Vidrio',
-        description: 'Las botellas de vidrio son envases retornables o reciclables que se utilizan para bebidas y alimentos.',
+        description: 'Las botellas de vidrio son envases duraderos y 100% reciclables. Su proceso de reciclaje no genera pérdida de calidad y permite reducir significativamente el consumo de energía y materias primas.',
         instructions: [
-            'Vacía completamente la botella',
-            'No es necesario enjuagar excesivamente',
-            'Deposítala en el contenedor verde específico para vidrio',
-            'No incluyas tapones de metal o corcho',
-            'Separa por colores si tu municipio lo requiere'
+            'Vacía completamente el contenido de la botella',
+            'No es necesario lavarla en exceso; basta eliminar residuos visibles',
+            'Deposítala en el contenedor verde destinado al vidrio',
+            'Retira los tapones de metal o corcho antes de depositarla',
+            'Si tu municipio lo solicita, separa por color (verde, ámbar o transparente)'
         ],
         tips: [
-            'El vidrio se recicla al 100% infinitamente',
-            'Una botella de vidrio reciclada ahorra la energía necesaria para mantener encendida una bombilla durante 4 horas',
-            'No deposites vidrio plano (ventanas, espejos) en el mismo contenedor'
+            'El vidrio puede reciclarse infinitamente sin perder calidad',
+            'Una botella reciclada ahorra la energía necesaria para encender una bombilla durante 4 horas',
+            'No deposites vidrios planos, espejos o cerámicas en el mismo contenedor',
+            'Reutiliza botellas retornables siempre que sea posible'
         ]
     },
+
     'plato': {
         type: 'no-reciclable',
         title: 'Plato (duroport)',
-        description: 'Platos de duroport (espuma de poliestireno) - material no reciclable en la mayoría de sistemas locales.',
+        description: 'Los platos de duroport, fabricados con espuma de poliestireno expandido (EPS), son ligeros y térmicos, pero altamente contaminantes. Este material no se recicla en la mayoría de los sistemas locales debido a su baja densidad, dificultad de limpieza y escaso valor comercial.',
         instructions: [
-            'Deposítalo en el contenedor gris de rechazo',
-            'No lo quemes ni lo tires en la naturaleza',
-            'Si está en buen estado, considera reutilizar o donar'
+            'Deposítalo en el contenedor gris o negro destinado a residuos no reciclables',
+            'No lo quemes: al hacerlo libera gases tóxicos como el estireno y el benceno',
+            'Evita desecharlo en la naturaleza, ya que se fragmenta en microplásticos',
+            'Si está limpio y en buen estado, reutilízalo para manualidades o actividades educativas'
         ],
         tips: [
-            'El duroport no se recicla fácilmente en plantas convencionales',
-            'Reduce el uso de platos desechables siempre que sea posible'
+            'El EPS no se recicla fácilmente por su baja rentabilidad',
+            'Opta por platos compostables o reutilizables hechos de bambú, bagazo o cartón',
+            'Algunos programas especializados aceptan duroport limpio; verifica en tu área',
+            'Evita productos de un solo uso siempre que sea posible'
         ]
     },
+
     'vaso': {
         type: 'no-reciclable',
         title: 'Vaso (duroport)',
-        description: 'Vasos de duroport/espuma (poliestireno expandido) — generalmente no reciclables y considerados residuo contaminante.',
+        description: 'Los vasos de duroport o espuma de poliestireno son residuos no reciclables y altamente contaminantes. Su estructura ligera dificulta su procesamiento en plantas de reciclaje y contribuye a la contaminación marina.',
         instructions: [
-            'Deposítalo en el contenedor gris de rechazo',
-            'Evita usar vasos desechables de duroport cuando sea posible',
-            'Si es un vaso reutilizable, límpialo y reutilízalo'
+            'Deposítalo en el contenedor gris o negro de rechazo',
+            'No lo incineres ni lo deseches al aire libre',
+            'Si es reutilizable, límpialo y guárdalo para nuevos usos'
         ],
         tips: [
-            'Los vasos de espuma no suelen aceptarse en plantas de reciclaje',
-            'Prefiere alternativas reutilizables o compostables'
+            'El poliestireno expandido tarda más de 400 años en degradarse',
+            'Prefiere vasos de materiales compostables o reutilizables como acero, vidrio o bambú',
+            'Evita productos de espuma en eventos y celebraciones masivas'
         ]
     },
+
     'jugo': {
         type: 'reciclable',
-        title: 'Caja de Jugo',
-        description: 'Envase de cartón para jugos. En muchos sistemas se considera envase reciclable o se procesa separadamente.',
+        title: 'Caja de Jugo (Tetra Pak)',
+        description: 'Los envases de cartón para jugos suelen estar hechos de varias capas (cartón, plástico y aluminio). Aunque reciclables, requieren tratamiento especializado para separar sus componentes.',
         instructions: [
             'Vacía completamente el contenido',
+            'Enjuaga ligeramente para evitar malos olores',
             'Aplasta la caja para ahorrar espacio',
-            'Deposítala en el contenedor de envases/reciclaje según tu municipio',
-            'Si tu servicio lo requiere, separa el tapón y deposítalo en el contenedor correspondiente'
+            'Deposítala en el contenedor amarillo o el designado para envases mixtos',
+            'Retira el tapón y deposítalo en el mismo contenedor'
         ],
         tips: [
-            'Las cajas de cartón para bebidas pueden requerir tratamiento especial en algunas plantas',
-            'Consulta la guía local de reciclaje para envases multi-capa'
+            'El reciclaje del Tetra Pak requiere plantas especializadas que separan sus capas',
+            'Confirma si tu municipio acepta este tipo de envases en la recolección común',
+            'Los materiales recuperados se utilizan para fabricar papel reciclado o láminas plásticas',
+            'Asegúrate de entregarlos secos y limpios'
         ]
     },
+
     'pizza': {
         type: 'reciclable',
         title: 'Caja de Pizza (cartón)',
-        description: 'Caja de cartón utilizada para pizza. Si está limpia es reciclable; si está muy grasosa, puede necesitar ir a merma o rechazo según normativa local.',
+        description: 'Las cajas de cartón para pizza pueden reciclarse si no están contaminadas con grasa o restos de comida. La parte limpia puede separarse y enviarse a reciclaje, mientras que la parte sucia debe desecharse o compostarse.',
         instructions: [
-            'Si la caja está limpia, pliega y deposítala en el contenedor de papel y cartón',
-            'Si la caja está muy contaminada con grasa o restos, córtala y deposítala en orgánicos o rechazo según tu municipio',
-            'Retira restos grandes de comida antes de reciclar'
+            'Si la caja está limpia, pliega y deposítala en el contenedor azul o de papel/cartón',
+            'Si tiene grasa o restos, corta las secciones sucias y deposítalas en orgánicos o rechazo',
+            'Retira restos grandes de comida antes de reciclarla'
         ],
         tips: [
-            'Una caja parcialmente limpia puede reciclarse separando la parte grasienta',
-            'Cuando dudes, consulta las reglas locales de reciclaje'
+            'El cartón limpio se recicla fácilmente en nuevos productos de papel',
+            'Evita que el cartón contaminado manche otros materiales reciclables',
+            'Separa siempre la parte aceitosa para mejorar la eficiencia del reciclaje'
         ]
     },
+
     'organico': {
         type: 'organico',
         title: 'Residuo Orgánico',
-        description: 'Los residuos orgánicos son ideales para compostaje/abono. Transfórmalos en nutrientes para tus plantas o entrégalos al sistema de orgánicos.',
+        description: 'Incluye restos de comida, frutas, verduras y materiales biodegradables. Son perfectos para compostaje, devolviendo nutrientes al suelo y reduciendo la cantidad de residuos enviados a vertederos.',
         instructions: [
-            'Prioriza el compostaje doméstico: deposítalo en tu compostera para generar abono',
-            'Si no tienes compostera, usa el contenedor marrón de orgánicos de tu municipio',
-            'Corta los restos en trozos pequeños para acelerar el proceso',
-            'No mezcles plásticos, metales o vidrio; usa bolsas compostables si necesitas bolsa'
+            'Usa compostera doméstica o el contenedor marrón de orgánicos',
+            'Corta los restos en trozos pequeños para acelerar la descomposición',
+            'No mezcles plásticos ni metales',
+            'Usa bolsas compostables si necesitas bolsa para su recolección'
         ],
         tips: [
-            'Mantén un buen balance: 2 partes de material seco (hojas/cartón) por 1 de restos de cocina',
-            'Evita grandes cantidades de carnes y lácteos en compost doméstico',
-            'Frutas, verduras, posos de café, té y cáscaras son excelentes para hacer abono'
+            'Mantén un equilibrio 2:1 entre material seco (cartón, hojas) y húmedo (restos de cocina)',
+            'Evita carnes y lácteos para prevenir malos olores',
+            'El compost maduro mejora la fertilidad del suelo y retiene humedad'
         ]
     },
+
     'manzana': {
         type: 'organico',
         title: 'Manzana',
-        description: 'Las manzanas son perfectas para hacer compost/abono y aportar nutrientes al suelo.',
+        description: 'Las manzanas y sus restos son ideales para compostaje. Aportan azúcares naturales que activan microorganismos beneficiosos y enriquecen el abono final.',
         instructions: [
-            'Depósitala en tu compostera; si no tienes, usa el contenedor marrón de orgánicos',
-            'Córtala en trozos para acelerar el compostaje',
-            'Evita bolsas plásticas; si necesitas, usa compostables o papel',
+            'Depósitala en tu compostera o en el contenedor marrón de orgánicos',
+            'Córtala en trozos para acelerar su descomposición',
+            'Evita usar bolsas plásticas; si es necesario, usa compostables',
             'Incluye corazón y semillas sin problema'
         ],
         tips: [
-            'Se descompone en 2-4 semanas en condiciones óptimas',
-            'Aporta azúcares que activan microorganismos beneficiosos',
-            'Mezcla con material seco (hojas/cartón) para evitar exceso de humedad'
+            'Se descompone en 2-4 semanas según las condiciones del compost',
+            'Aporta carbono y nutrientes esenciales',
+            'Mezcla con hojas secas o cartón para evitar exceso de humedad'
         ]
     },
+
     'banano': {
         type: 'organico',
         title: 'Banana/Plátano',
-        description: 'Las bananas y sus cáscaras son excelentes para compost/abono por su riqueza en potasio.',
+        description: 'Las cáscaras y restos de banana son ricas en potasio y minerales. Se descomponen rápidamente, aportando nutrientes ideales para flores y frutos.',
         instructions: [
-            'Añade cáscaras y restos a tu compostera; como alternativa, usa el contenedor marrón',
-            'Trocea cáscaras para acelerar su descomposición',
-            'Evita bolsas plásticas; prefiere compostables',
-            'Incluye la fruta si está pasada o en mal estado'
+            'Trocea las cáscaras y añádelas al compost o al contenedor marrón',
+            'Evita bolsas plásticas; usa compostables o deposítalas directamente',
+            'Incluye la fruta si está pasada o dañada'
         ],
         tips: [
-            'Ricas en potasio: benefician el desarrollo de flores y frutos',
-            'Se descomponen rápido (1-2 semanas en trozos pequeños)',
-            'Enterrándolas cerca de plantas aportan nutrientes de forma gradual'
+            'Se descomponen en 1-2 semanas',
+            'Aportan potasio, fósforo y magnesio al compost',
+            'Enterrarlas cerca de plantas mejora la floración'
         ]
     },
+
     'limon': {
         type: 'organico',
         title: 'Limón',
-        description: 'Los limones y cítricos pueden compostarse; úsalos con moderación para evitar acidificar en exceso.',
+        description: 'Los limones pueden compostarse en pequeñas cantidades. Aportan aceites y compuestos ácidos que ayudan a mantener el equilibrio biológico del compost si se usan moderadamente.',
         instructions: [
-            'Añade cáscaras y pulpa en pequeñas cantidades a la compostera',
-            'Si no compostas, deposítalo en el contenedor marrón de orgánicos',
-            'Evita bolsas plásticas; usa compostables',
-            'Trocea para acelerar la descomposición'
+            'Trocea las cáscaras y mézclalas con material seco',
+            'Depósitalo en tu compostera o en el contenedor marrón',
+            'Evita excederte para no acidificar el compost'
         ],
         tips: [
-            'Úsalos mezclados con material marrón para equilibrar humedad y acidez',
-            'Se descomponen en 2-3 semanas en trozos pequeños',
-            'Las cáscaras aportan aceites naturales; no excederse para no frenar microorganismos'
+            'Se descompone en 2-3 semanas',
+            'En pequeñas cantidades aporta aroma y repelencia natural a insectos',
+            'Ideal mezclar con restos vegetales y hojas secas'
         ]
     },
+
     'huevo': {
         type: 'organico',
         title: 'Huevo',
-        description: 'Las cáscaras de huevo trituradas son excelentes para compost/abono por su aporte de calcio.',
+        description: 'Las cáscaras de huevo son una fuente natural de calcio. Trituradas, ayudan a reducir la acidez del compost y fortalecen los suelos.',
         instructions: [
-            'Seca y tritura las cáscaras antes de añadirlas a la compostera',
-            'Si no compostas, úsalas en el contenedor marrón',
-            'Evita añadir grandes cantidades de restos cocidos grasos',
-            'Mezcla con material seco para equilibrar'
+            'Seca las cáscaras y tritúralas antes de compostar',
+            'Deposítalas en el contenedor marrón o en tu compostera',
+            'Evita añadir grandes cantidades de restos cocidos o grasosos'
         ],
         tips: [
-            'Aportan calcio que ayuda a reducir la acidez del compost',
-            'Cuanto más trituradas, más rápido se integran',
-            'Útiles para suelos y plantas que requieren calcio'
+            'El calcio del huevo fortalece la estructura del suelo',
+            'Cuanto más trituradas estén las cáscaras, más rápido se integran',
+            'Pueden colocarse directamente en las macetas como suplemento mineral'
         ]
     },
+
     'piña': {
         type: 'organico',
         title: 'Piña',
-        description: 'La piña y sus residuos (cáscara, corazón, hojas) son aptos para compost/abono.',
+        description: 'La piña y sus partes (cáscara, corazón y hojas) son compostables y aportan enzimas que aceleran la descomposición de otros materiales.',
         instructions: [
-            'Añade cáscara, corazón y hojas a tu compostera; trocea para acelerar',
-            'Si no compostas, deposítalos en el contenedor marrón de orgánicos',
-            'Mezcla con material seco para evitar exceso de humedad',
-            'Evita bolsas plásticas; prefiere compostables'
+            'Trocea los restos y añádelos al compost o contenedor marrón',
+            'Evita bolsas plásticas; usa compostables',
+            'Equilibra con material seco para evitar exceso de humedad'
         ],
         tips: [
-            'Contiene enzimas que ayudan a la descomposición',
-            'Se descompone en 3-4 semanas en condiciones favorables',
-            'Aporta humedad; equilibra con hojas secas o cartón'
+            'Las enzimas naturales ayudan al proceso de compostaje',
+            'Se descompone en 3-4 semanas',
+            'Aporta azúcares que alimentan microorganismos beneficiosos'
         ]
     },
+
     'carton de jugo': {
         type: 'reciclable',
-        title: 'Cartón de jugo (con pajilla)',
-        description: 'Envase de cartón/Tetra Pak típico de jugos infantiles. Está compuesto mayoritariamente por cartón con capas finas de plástico y/o aluminio y suele incluir una pajilla de plástico.',
+        title: 'Cartón de Jugo (con pajilla)',
+        description: 'Los envases Tetra Pak combinan cartón, plástico y aluminio. Aunque su reciclaje es posible, requiere separación industrial de sus capas. Su limpieza y compactación facilitan el proceso.',
         instructions: [
-            'Vacía y enjuaga bien el envase para evitar malos olores',
-            'Retira la pajilla y el envoltorio de la pajilla y deposítalos en el contenedor de plásticos según normativa local',
-            'Aplasta el cartón para ahorrar espacio',
-            'Depósitalo en el contenedor de envases/reciclaje (según tu municipio)'
+            'Vacía y enjuaga bien el envase',
+            'Retira la pajilla y su envoltorio; deposítalos con los plásticos',
+            'Aplasta el envase para ahorrar espacio',
+            'Deposítalo seco en el contenedor de envases o reciclaje mixto'
         ],
         tips: [
-            'En algunos municipios los Tetra Pak se recogen junto con plásticos y metales (contenedor amarillo); confirma tu guía local',
-            'Si es posible, separa el tapón plástico y recíclalo con los plásticos',
-            'Asegúrate de que esté seco y limpio para mejorar su reciclaje.'
+            'El reciclaje del Tetra Pak genera papel, plásticos y aluminio reutilizables',
+            'Confirma si tu municipio lo acepta en el contenedor amarillo',
+            'Asegúrate de entregarlo seco y limpio para facilitar su recuperación'
         ]
     },
-      'papel': {
-    type: 'reciclable',
-    title: 'Papel y Cartón',
-    description: 'Papel y cartón limpios y secos son materiales reciclables que se procesan para fabricar nuevos productos de papel.',
-    instructions: [
-        'Retira restos de comida y plásticos adheridos',
-        'Aplasta las cajas y dóblalas para ahorrar espacio',
-        'Deposítalo en el contenedor azul o el contenedor de papel y cartón de tu municipio',
-        'No incluyas papel encerado o cartón con tratamiento plástico'
-    ],
-    tips: [
-        'El papel debe estar seco y limpio para ser reciclable',
-        'Reutiliza cajas cuando sea posible antes de reciclarlas',
-        'Evita mezclar papel con residuos orgánicos o plásticos'
-    ]
+
+    'papel': {
+        type: 'reciclable',
+        title: 'Papel y Cartón',
+        description: 'El papel y el cartón son materiales reciclables siempre que estén limpios y secos. Pueden reprocesarse hasta 6 veces para fabricar nuevos productos como cajas, cuadernos y cartulina.',
+        instructions: [
+            'Retira restos de comida, cinta o plástico',
+            'Dobla o aplasta para ahorrar espacio',
+            'Deposítalo en el contenedor azul o el de papel/cartón',
+            'No incluyas papel encerado, plastificado o muy sucio'
+        ],
+        tips: [
+            'El papel húmedo o con grasa no se recicla',
+            'Reutiliza cajas y hojas antes de desecharlas',
+            'Guarda los papeles limpios separados del resto de residuos'
+        ]
     },
+
     'merma': {
         type: 'merma',
-        title: 'Merma / Basura',
-        description: 'Objetos que han llegado al final de su vida útil y no pueden ser reciclados, reutilizados o compostados. Son residuos que deben ir al contenedor de rechazo.',
+        title: 'Merma / Basura No Reciclable',
+        description: 'Residuos que no pueden reutilizarse, reciclarse ni compostarse. Incluye objetos dañados, mezclas de materiales y artículos de un solo uso sin valor de recuperación.',
         instructions: [
-            'Deposítalo en el contenedor gris de rechazo',
-            'Asegúrate de que no contenga materiales peligrosos',
-            'Si es un objeto grande, consulta con el servicio de recolección especial',
-            'No lo quemes ni lo tires en la naturaleza',
-            'Si contiene datos personales (documentos, discos), destrúyelos antes de desechar'
+            'Deposítalos en el contenedor gris o negro de rechazo',
+            'Asegúrate de que no contengan materiales peligrosos',
+            'Si son objetos grandes, consulta el servicio de recolección especial',
+            'No los quemes ni los deseches en la naturaleza'
         ],
         tips: [
-            'Antes de desechar, considera si realmente no se puede reparar o reutilizar',
-            'Los objetos de merma van a vertederos controlados donde se manejan de forma segura',
-            'Evita generar merma innecesaria: compra solo lo que necesites',
-            'Si el objeto es muy grande, llévalo a un punto limpio o solicita recogida especial',
-            'Los residuos peligrosos (pilas, medicamentos, aceites) van a puntos limpios, no al contenedor gris'
+            'Reduce la generación de merma eligiendo productos duraderos',
+            'Llévalos a puntos limpios si el tamaño o tipo lo requiere',
+            'Destruye documentos o discos con datos personales antes de tirarlos',
+            'Evita confundir residuos peligrosos con basura común (pilas, aceites, medicamentos van a puntos especiales)'
         ]
     },
-    "tomate": {
+
+    'tomate': {
         type: 'organico',
         title: 'Tomate',
-        description: 'Los tomates son ideales para compostaje/abono, aportando nutrientes esenciales al suelo.',
+        description: 'Los tomates aportan humedad y nutrientes al compost. Se descomponen rápidamente, ayudando a activar la fermentación y enriqueciendo el abono.',
         instructions: [
-            'Depósitalo en tu compostera; si no tienes, usa el contenedor marrón de orgánicos',
-            'Córtalo en trozos para acelerar el compostaje',
-            'Evita bolsas plásticas; si necesitas, usa compostables o papel',
-            'Incluye tanto la fruta como el tallo si está en buen estado'
+            'Trocea los tomates y añádelos al compost o al contenedor marrón',
+            'Evita bolsas plásticas',
+            'Incluye tallos o restos vegetales si están sanos'
         ],
         tips: [
-            'Se descompone en 2-4 semanas en condiciones óptimas',
-            'Aporta vitaminas y minerales que benefician el suelo',
-            'Mezcla con material seco (hojas/cartón) para evitar exceso de humedad'
+            'Aporta nitrógeno y vitaminas al compost',
+            'Se descompone en 2-3 semanas',
+            'Combina con material seco para evitar exceso de agua'
         ]
     },
-    "papaya": {
+
+    'papaya': {
         type: 'organico',
         title: 'Papaya',
-        description: 'Las papayas son excelentes para compost/abono debido a su alto contenido de agua y nutrientes.',
+        description: 'Las papayas y sus cáscaras son compostables. Su alto contenido de agua las hace ideales para mantener la humedad del compost y aportar nutrientes.',
         instructions: [
-            'Añade restos y cáscaras a tu compostera; como alternativa, usa el contenedor marrón',
-            'Trocea para acelerar la descomposición',
-            'Evita bolsas plásticas; prefiere compostables',
-            'Incluye la fruta si está pasada o en mal estado'
+            'Trocea las cáscaras y restos antes de compostar',
+            'Depósitalas en el contenedor marrón si no compostas en casa',
+            'Evita bolsas plásticas; usa compostables o deposítalas directamente'
         ],
         tips: [
-            'Se descompone rápidamente (1-2 semanas en trozos pequeños)',
-            'Aporta humedad y nutrientes beneficiosos para el compost',
-            'Mezcla con material seco para equilibrar la humedad'
+            'Se descompone en 1-2 semanas',
+            'Aporta humedad y nutrientes esenciales',
+            'Ideal combinar con cartón seco para equilibrar la mezcla'
         ]
     }
-};
+}
+
 function getWasteType(label) {
     const normalizedLabel = label.toLowerCase().trim();
 
