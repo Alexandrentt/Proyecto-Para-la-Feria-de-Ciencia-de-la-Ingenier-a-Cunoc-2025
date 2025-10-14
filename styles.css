@@ -265,38 +265,40 @@ h1 {
     background: linear-gradient(45deg, #f8f9fa, #e9ecef);
     border-radius: 15px;
     margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .prediction {
     font-size: 2rem;
     font-weight: bold;
-    margin-bottom: 10px;
+    margin: 0 auto 10px auto;
     min-height: 60px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    /* Contenedor con ancho máximo responsivo para que el fondo no salte entre predicciones */
     width: 100%;
     max-width: 720px;
 }
 
 .prediction-result {
     text-align: center;
-    /* Permitir que las etiquetas quiebren línea y no expandan el fondo en pantallas pequeñas */
     white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
-    display: block;
-    height: 60px;
-    overflow: hidden;
-    /* Hacer el nombre más prominente y responsivo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
     padding: 12px 18px;
     font-size: clamp(1.1rem, 3.5vw, 1.6rem);
     border-radius: 10px;
     width: 100%;
     box-sizing: border-box;
+    margin: 0 auto;
 }
 
 /* Fondo amplio en pantallas grandes: dejar más espacio horizontal */
@@ -361,6 +363,7 @@ h1 {
     text-align: center;
     display: block;
     margin: 8px auto 0 auto;
+    width: 100%;
 }
 
 .status {
@@ -1015,6 +1018,7 @@ input:checked + .slider:before {
 .recycling-content.show {
     max-height: 800px;
     padding: 20px;
+    overflow-y: auto;
 }
 
 .recycling-header {
@@ -1057,6 +1061,7 @@ input:checked + .slider:before {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    text-align: left;
 }
 
 .info-description {
@@ -1064,6 +1069,7 @@ input:checked + .slider:before {
     line-height: 1.6;
     margin-bottom: 20px;
     color: #495057;
+    text-align: left;
 }
 
 .info-section {
@@ -1124,9 +1130,8 @@ input:checked + .slider:before {
     padding: 6px 12px;
     border-radius: 15px;
     font-weight: bold;
-    /* usar clamp para adaptar tamaño entre 0.85rem y 1.05rem según ancho */
     font-size: clamp(0.85rem, 1.6vw, 1.05rem);
-    margin: 8px 0;
+    margin: 8px auto;
     text-align: center;
     min-width: 120px;
 }
@@ -1182,11 +1187,6 @@ input:checked + .slider:before {
     display: none !important;
 }
 
-/* Ocultar etiqueta y selector de cámara completos en escritorio */
-.camera-config {
-    display: none;
-}
-
 @media (max-width: 768px) {
     .camera-options {
         display: grid !important;
@@ -1194,13 +1194,15 @@ input:checked + .slider:before {
         gap: 10px;
         justify-items: center;
     }
-    /* Mostrar el bloque completo de cámara en móviles */
-    .camera-config {
-        display: block;
-    }
     
     .recycling-content.show {
-        max-height: 600px;
+        max-height: 400px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .recycling-body {
+        max-height: none;
     }
     
     .recycling-header {
@@ -1235,21 +1237,6 @@ input:checked + .slider:before {
 @media (max-width: 480px) {
     .prediction {
         gap: 8px;
-    }
-
-    /* Badge para indicar confianza baja / etiqueta desconocida */
-    .unknown-badge {
-        margin-top: 10px;
-        background: #fff3cd;
-        color: #856404;
-        border: 1px solid #ffeeba;
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-weight: 600;
-        text-align: center;
-        max-width: 520px;
-        margin-left: auto;
-        margin-right: auto;
     }
 
     .prediction-result {
