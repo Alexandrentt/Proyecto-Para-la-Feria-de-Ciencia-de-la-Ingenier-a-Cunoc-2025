@@ -65,6 +65,30 @@
                     <div id="prediction" class="prediction">Esperando clasificación...</div>
                     <div id="confidence" class="confidence"></div>
                 </div>
+
+                <!-- Menú Desplegable de Información de Reciclaje -->
+                <div id="recycling-info" class="recycling-info-dropdown">
+                    <button class="info-toggle-btn" onclick="toggleRecyclingInfo()">
+                        ℹ️ Ver Información de Reciclaje
+                    </button>
+                    <div id="recycling-content" class="recycling-content">
+                        <div class="recycling-header">
+                            <h3 id="info-title">Información de Reciclaje</h3>
+                            <span id="info-type" class="info-type-badge"></span>
+                        </div>
+                        <div class="recycling-body">
+                            <p id="info-description" class="info-description"></p>
+                            <div class="info-section">
+                                <h4>¿Cómo reciclar?</h4>
+                                <ul id="info-instructions" class="info-list"></ul>
+                            </div>
+                            <div class="info-section">
+                                <h4>Consejos adicionales</h4>
+                                <ul id="info-tips" class="info-list"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
     
                 <!-- Configuración Rápida -->
                 <div class="quick-config">
@@ -78,6 +102,13 @@
                                 <button id="capture-mode-btn" class="mode-option active" onclick="setWebcamMode('capture')">
                                      Captura
                                 </button>
+                            </div>
+                        </div>
+                        <div class="config-item camera-config">
+                            <label>Camara:</label>
+                            <div class="mode-options camera-options">
+                                <button id="rear-camera-btn" class="mode-option active" onclick="setCameraFacing('environment')">Trasera</button>
+                                <button id="front-camera-btn" class="mode-option" onclick="setCameraFacing('user')">Frontal</button>
                             </div>
                         </div>
                     </div>
