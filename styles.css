@@ -1182,12 +1182,20 @@ input:checked + .slider:before {
     transform: translateY(0);
 }
 
-/* Ocultar selector de cámaras en escritorio; mostrar solo en móviles */
-.camera-options {
+/* Ocultar selector de cámaras y su label en escritorio; mostrar solo en móviles */
+.camera-config {
     display: none !important;
 }
 
 @media (max-width: 768px) {
+    .camera-config {
+        display: block !important;
+    }
+    
+    .camera-label {
+        display: none !important;
+    }
+    
     .camera-options {
         display: grid !important;
         grid-template-columns: 1fr 1fr;
