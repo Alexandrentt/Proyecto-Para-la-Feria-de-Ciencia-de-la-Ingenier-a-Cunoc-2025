@@ -217,7 +217,78 @@ async function initWebcam() {
             }
         }
 
-    // Si llegamos aquí, consideramos la webcam en play
+        // Si llegamos aquí, consideramos la webcam en play
+        // Comprobar si realmente se abrió la cámara trasera; si no, intentar con otra cámara disponible.
+        let actuallyFront = false;
+        try {
+            const activeStream = webcam && webcam.video && webcam.video.srcObject;
+            if (activeStream) {
+                const track = activeStream.getVideoTracks()[0];
+                const settings = track.getSettings && track.getSettings();
+                const label = track.label || '';
+                // Algunos navegadores devuelven facingMode en settings
+                if (settings && settings.facingMode) {
+                    actuallyFront = settings.facingMode === 'user' || settings.facingMode === 'front';
+                } else {
+                    // Fallback: inferir por label si contiene palabras comunes
+                    const frontRegex = /front|user|selfie|frontal/i;
+                    actuallyFront = frontRegex.test(label);
+                }
+                console.log('initWebcam: cámara activa label/settings:', label, settings, ' actuallyFront=', actuallyFront);
+            }
+        } catch (e) {
+            console.warn('initWebcam: no se pudo determinar facingMode del track:', e);
+        }
+
+        // Si detectamos que por alguna razón se abrió la frontal, intentamos seleccionar otra cámara (trasera) si existe
+        if (actuallyFront && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoInputs = devices.filter(d => d.kind === 'videoinput');
+                const frontRegex = /front|user|selfie|frontal/i;
+                const rearCandidate = videoInputs.find(d => d.label && !frontRegex.test(d.label));
+                if (rearCandidate) {
+                    console.log('initWebcam: se detectó frontal. Reintentando con candidate trasera:', rearCandidate.label || rearCandidate.deviceId);
+                    // Detener stream actual
+                    try {
+                        if (webcam && typeof webcam.stop === 'function') webcam.stop();
+                        if (webcam && webcam.video && webcam.video.srcObject) {
+                            const tracks = webcam.video.srcObject.getTracks();
+                            tracks.forEach(t => t.stop());
+                        }
+                    } catch (stopErr) {
+                        console.warn('initWebcam: error deteniendo stream antes de reintentar:', stopErr);
+                    }
+
+                    // Forzar deviceId al candidate trasera y reiniciar webcam una única vez
+                    constraints.video.deviceId = { exact: rearCandidate.deviceId };
+                    // Ajustar flip acorde (trasera no debe flipearse)
+                    const flipRetry = false; // trasera -> no flip
+                    webcam = new tmImage.Webcam(640, 480, flipRetry);
+                    await webcam.setup(constraints);
+                    await webcam.play();
+                    // actualizar canvas/video
+                    const finalCanvasRetry = document.getElementById('webcam-canvas');
+                    if (finalCanvasRetry && webcam && webcam.video) {
+                        const vw = webcam.video.videoWidth || webcam.canvas && webcam.canvas.width || 640;
+                        const vh = webcam.video.videoHeight || webcam.canvas && webcam.canvas.height || 480;
+                        finalCanvasRetry.width = vw;
+                        finalCanvasRetry.height = vh;
+                        finalCanvasRetry.style.display = 'block';
+                        if (webcam.canvas) {
+                            webcam.canvas.width = vw;
+                            webcam.canvas.height = vh;
+                        }
+                    }
+                    console.log('initWebcam: reintento con cámara trasera realizado');
+                } else {
+                    console.log('initWebcam: no se encontró una cámara trasera alternativa para reintentar');
+                }
+            } catch (retryErr) {
+                console.warn('initWebcam: error al enumerar/reintentar con cámara trasera:', retryErr);
+            }
+        }
+
         isWebcamActive = true;
         console.log('initWebcam: isWebcamActive = true');
 
