@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,8 @@
     <!-- Librerías CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script>
     <!-- COCO-SSD eliminado - solo modo individual -->
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="styles.css">
@@ -19,10 +21,10 @@
     <div class="container">
 
         <!-- Vista Principal -->
-    <div id="home-view" class="view active">
-                <header>
+        <div id="home-view" class="view active">
+            <header>
                 <h1>Sistema Automático de Reconocimieto de Basura - SARB <h1>
-                <p class="subtitle">Detecta • Clasifica • Transforma </p>
+                        <p class="subtitle">Detecta • Clasifica • Transforma </p>
             </header>
 
             <div class="card">
@@ -30,10 +32,10 @@
                 <!-- Selector de Modo -->
                 <div class="mode-selector">
                     <button class="mode-btn active" onclick="switchMode('webcam')">
-                         Usar Webcam
+                        Usar Webcam
                     </button>
                     <button class="mode-btn" onclick="switchMode('upload')">
-                         Subir Imagen
+                        Subir Imagen
                     </button>
                 </div>
 
@@ -43,6 +45,7 @@
                         <div class="loading-spinner"></div>
                         <p>Iniciando aplicación...</p>
                     </div>
+                    <video id="webcam" autoplay playsinline muted style="width: 100%; max-width: 100%; display: none;"></video>
                     <canvas id="webcam-canvas" style="display: none;"></canvas>
                 </div>
 
@@ -55,8 +58,9 @@
                     </div>
                     <input type="file" id="file-input" accept="image/*">
                     <img id="preview-image" class="preview-image" style="display: none;">
-                    <button id="classify-image-btn" class="classify-btn" style="display: none;" onclick="classifyUploadedImage()">
-                         Clasificar Imagen
+                    <button id="classify-image-btn" class="classify-btn" style="display: none;"
+                        onclick="classifyUploadedImage()">
+                        Clasificar Imagen
                     </button>
                 </div>
 
@@ -69,7 +73,7 @@
                 <!-- Menú Desplegable de Información de Reciclaje -->
                 <div id="recycling-info" class="recycling-info-dropdown">
                     <button class="info-toggle-btn" onclick="toggleRecyclingInfo()">
-                         Ver Información de Reciclaje
+                        Ver Información de Reciclaje
                     </button>
                     <div id="recycling-content" class="recycling-content">
                         <div class="recycling-header">
@@ -89,34 +93,38 @@
                         </div>
                     </div>
                 </div>
-    
+
                 <!-- Configuración Rápida -->
                 <div class="quick-config">
                     <div class="config-row">
                         <div class="config-item">
                             <label>Modo Webcam:</label>
                             <div class="mode-options">
-                                <button id="continuous-mode-btn" class="mode-option" onclick="setWebcamMode('continuous')">
-                                     Continua
+                                <button id="continuous-mode-btn" class="mode-option"
+                                    onclick="setWebcamMode('continuous')">
+                                    Continua
                                 </button>
-                                <button id="capture-mode-btn" class="mode-option active" onclick="setWebcamMode('capture')">
-                                     Captura
+                                <button id="capture-mode-btn" class="mode-option active"
+                                    onclick="setWebcamMode('capture')">
+                                    Captura
                                 </button>
                             </div>
                         </div>
                         <div class="config-item">
                             <label>Camara:</label>
                             <div class="mode-options camera-options">
-                                <button id="rear-camera-btn" class="mode-option active" onclick="setCameraFacing('environment')">Trasera</button>
-                                <button id="front-camera-btn" class="mode-option" onclick="setCameraFacing('user')">Frontal</button>
+                                <button id="rear-camera-btn" class="mode-option active"
+                                    onclick="setCameraFacing('environment')">Trasera</button>
+                                <button id="front-camera-btn" class="mode-option"
+                                    onclick="setCameraFacing('user')">Frontal</button>
                             </div>
                         </div>
                     </div>
-     
+
                     <!-- Botón de Captura (solo visible en modo captura) -->
                     <div id="capture-controls" class="capture-controls">
                         <button id="capture-btn" class="capture-btn" onclick="captureAndClassify()">
-                             Capturar y Clasificar
+                            Capturar y Clasificar
                         </button>
                     </div>
                 </div>
@@ -130,4 +138,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
