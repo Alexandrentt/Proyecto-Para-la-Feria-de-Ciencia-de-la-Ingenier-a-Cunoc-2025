@@ -7,9 +7,7 @@
     <title> SARB </title>
     <link rel="icon" type="image/png" href="favicon.png">
 
-    <!-- Librerías CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.18.0/dist/tf.min.js"></script>
-    <!-- COCO-SSD eliminado - solo modo individual -->
     <script
         src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,16 +18,14 @@
 <body>
     <div class="container">
 
-        <!-- Vista Principal -->
         <div id="home-view" class="view active">
             <header>
-                <h1>Sistema Automático de Reconocimieto de Basura - SARB <h1>
+                <h1>Sistema Automático de Reconocimiento de Basura - SARB</h1>
                         <p class="subtitle">Detecta • Clasifica • Transforma </p>
             </header>
 
             <div class="card">
 
-                <!-- Selector de Modo -->
                 <div class="mode-selector">
                     <button class="mode-btn active" onclick="switchMode('webcam')">
                         Usar Webcam
@@ -49,7 +45,6 @@
                     <canvas id="webcam-canvas" style="display: none;"></canvas>
                 </div>
 
-                <!-- Sección Upload -->
                 <div id="upload-section" class="upload-section">
                     <div class="upload-area" onclick="document.getElementById('file-input').click()">
                         <div class="upload-icon">📁</div>
@@ -64,13 +59,11 @@
                     </button>
                 </div>
 
-                <!-- Resultados -->
                 <div class="results">
                     <div id="prediction" class="prediction">Esperando clasificación...</div>
                     <div id="confidence" class="confidence"></div>
                 </div>
 
-                <!-- Menú Desplegable de Información de Reciclaje -->
                 <div id="recycling-info" class="recycling-info-dropdown">
                     <button class="info-toggle-btn" onclick="toggleRecyclingInfo()">
                         Ver Información de Reciclaje
@@ -94,7 +87,6 @@
                     </div>
                 </div>
 
-                <!-- Configuración Rápida -->
                 <div class="quick-config">
                     <div class="config-row">
                         <div class="config-item">
@@ -110,18 +102,8 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="config-item camera-config" style="display: none;">
-                            <label>Camara:</label>
-                            <div class="mode-options camera-options">
-                                <button id="rear-camera-btn" class="mode-option active"
-                                    onclick="setCameraFacing('environment')">Trasera</button>
-                                <button id="front-camera-btn" class="mode-option"
-                                    onclick="setCameraFacing('user')">Frontal</button>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Botón de Captura (solo visible en modo captura) -->
                     <div id="capture-controls" class="capture-controls">
                         <button id="capture-btn" class="capture-btn" onclick="captureAndClassify()">
                             Capturar y Clasificar
@@ -133,10 +115,9 @@
     </div>
 
     <div class="footer">
-        <p>Proyecto Feria de ciencia Ingeniería 2025</p>
+        <p>Proyecto Feria de Ciencia • Ingeniería 2025</p>
     </div>
 
     <script src="script.js"></script>
 </body>
-
 </html>

@@ -1,14 +1,23 @@
-/* CSS Variables para temas */
 :root {
-    /* Tema Claro */
-    --primary-color: #19381f;
-    --secondary-color: #4c934c;
-    --success-color: #53a548;
+    --pakistan-green: #10451d;
+    --dartmouth-green: #155d27;
+    --dark-spring-green: #1a7431;
+    --forest-green: #208b3a;
+    --pigment-green: #25a244;
+    --dark-pastel-green: #2dc653;
+    --malachite: #4ad66d;
+    --light-green: #6ede8a;
+    --celadon: #92e6a7;
+    --celadon-2: #b7efc5;
+
+    --primary-color: var(--pakistan-green);
+    --secondary-color: var(--pigment-green);
+    --success-color: var(--malachite);
     --danger-color: #dc3545;
-    --warning-color: #eee82c;
-    --info-color: #17a2b8;
-    --light-color: #91cb3e;
-    --dark-color: #19381f;
+    --warning-color: #ffc107;
+    --info-color: var(--dark-pastel-green);
+    --light-color: var(--light-green);
+    --dark-color: var(--dartmouth-green);
     --white: #ffffff;
     --gray-100: #f8f9fa;
     --gray-200: #e9ecef;
@@ -21,40 +30,35 @@
     --gray-900: #212529;
     --black: #000000;
 
-    /* Fondos y superficies */
-    --bg-primary: linear-gradient(135deg, #91cb3e 0%, #53a548 50%, #4c934c 100%);
+    --bg-primary: linear-gradient(90deg, var(--dark-pastel-green) 0%, var(--pigment-green) 100%);
     --bg-secondary: #ffffff;
     --bg-tertiary: #f8f9fa;
     --bg-card: #ffffff;
     --bg-modal: rgba(0, 0, 0, 0.8);
 
-    /* Textos */
-    --text-primary: #19381f;
-    --text-secondary: #495057;
+    --text-primary: var(--primary-color);
+    --text-secondary: #3a4a3f;
     --text-light: #ffffff;
     --text-muted: #6c757d;
 
-    /* Bordes y sombras */
     --border-color: #dee2e6;
     --shadow: 0 2px 8px rgba(0,0,0,0.1);
     --shadow-hover: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-/* Tema Oscuro */
 [data-theme="dark"] {
-    --primary-color: #19381f;
-    --secondary-color: #4c934c;
-    --success-color: #53a548;
+    --primary-color: var(--pakistan-green);
+    --secondary-color: var(--pigment-green);
+    --success-color: var(--malachite);
     --danger-color: #dc3545;
-    --warning-color: #eee82c;
-    --info-color: #17a2b8;
-    --light-color: #91cb3e;
-    --dark-color: #19381f;
+    --warning-color: #ffc107;
+    --info-color: var(--dark-pastel-green);
+    --light-color: var(--light-green);
+    --dark-color: var(--dartmouth-green);
     --white: #ffffff;
     --gray-100: #1a1a1a;
 }
 
-/* Asegurar contraste en elementos con fondo blanco en tema oscuro */
 [data-theme="dark"] .card h1,
 [data-theme="dark"] .card h2,
 [data-theme="dark"] .card h3,
@@ -65,7 +69,6 @@
     color: var(--text-primary) !important;
 }
 
-/* Estilos responsivos para configuración rápida */
 @media (max-width: 768px) {
     .quick-config {
         padding: 15px;
@@ -113,9 +116,6 @@ body {
     padding: 20px;
 }
 
-/* Menú desplegable */
-    /* .help-content and .help-btn removed (help UI removed) */
-    /* Help UI styles removed */
 .dropdown-menu button:hover {
     background: #f8f9fa;
 }
@@ -124,7 +124,6 @@ body {
     background: #e9ecef;
 }
 
-/* Vistas */
 .view {
     display: none;
     opacity: 0;
@@ -140,20 +139,26 @@ body {
 
 header {
     text-align: center;
-    color: white;
+    color: var(--white);
     margin-bottom: 30px;
     position: relative;
+    background: transparent;
+    padding: 24px 16px;
+    border-radius: 12px;
 }
 
 h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    color: var(--white);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.35);
 }
 
 .subtitle {
     font-size: 1.1rem;
-    opacity: 0.9;
+    color: var(--white);
+    opacity: 0.95;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.3);
 }
 
 .card {
@@ -186,15 +191,14 @@ h1 {
     transition: all 0.3s ease;
     background: #f8f9fa;
     color: #495057;
-    /* Evitar que el botón se expanda por texto muy largo */
     white-space: normal;
     max-width: 240px;
     overflow-wrap: anywhere;
 }
 
 .mode-btn.active {
-    background: linear-gradient(45deg, #28a745, #20c997);
-    color: white;
+    background: linear-gradient(45deg, var(--emerald), var(--verdigris));
+    color: var(--primary-color);
     transform: scale(1.05);
 }
 
@@ -224,23 +228,23 @@ h1 {
 }
 
 .upload-area {
-    border: 3px dashed #28a745;
+    border: 3px dashed var(--emerald);
     border-radius: 15px;
     padding: 40px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: #f8fff9;
+    background: var(--tea-green);
 }
 
 .upload-area:hover {
-    background: #e8f5e8;
-    border-color: #20c997;
+    background: #e1ffee;
+    border-color: var(--verdigris);
 }
 
 .upload-area.dragover {
-    background: #d4edda;
-    border-color: #155724;
+    background: #dfffea;
+    border-color: var(--emerald);
 }
 
 #file-input {
@@ -262,7 +266,7 @@ h1 {
 .results {
     text-align: center;
     padding: 25px;
-    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    background: linear-gradient(45deg, var(--gray-100), var(--gray-200));
     border-radius: 15px;
     margin-top: 20px;
     display: flex;
@@ -301,17 +305,15 @@ h1 {
     margin: 0 auto;
 }
 
-/* Fondo amplio en pantallas grandes: dejar más espacio horizontal */
 @media (min-width: 769px) {
     .prediction-result {
-        max-width: 680px; /* fondo amplio en escritorio */
+        max-width: 680px; 
         min-width: 300px;
         font-size: 1.2rem;
         padding: 12px 24px;
     }
 }
 
-/* En móviles, limitar el ancho y permitir quiebre natural dentro del área */
 @media (max-width: 768px) {
     .prediction-result {
         max-width: 320px;
@@ -375,13 +377,13 @@ h1 {
 }
 
 .status.loading {
-    background: #d1ecf1;
-    color: #0c5460;
+    background: #d7f3ff;
+    color: #0a5770;
 }
 
 .status.success {
-    background: #d4edda;
-    color: #155724;
+    background: #e1ffee;
+    color: #0f5c3f;
 }
 
 .status.error {
@@ -391,7 +393,7 @@ h1 {
 
 .classify-btn {
     padding: 15px 40px;
-    background: linear-gradient(45deg, #007bff, #6610f2);
+    background: linear-gradient(45deg, var(--dark-pastel-green), var(--pigment-green));
     color: white;
     border: none;
     border-radius: 50px;
@@ -406,7 +408,7 @@ h1 {
 
 .classify-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(0,123,255,0.3);
+    box-shadow: 0 10px 20px rgba(16, 69, 29, 0.25);
 }
 
 .classify-btn:disabled {
@@ -425,10 +427,12 @@ h1 {
 
 .footer {
     text-align: center;
-    color: white;
+    color: #000;
     opacity: 0.8;
     margin-top: auto;
     padding: 20px;
+    background: var(--dark-pastel-green);
+    font-weight: 700;
 }
 
 @media (max-width: 768px) {
@@ -465,7 +469,6 @@ h1 {
     100% { transform: rotate(360deg); }
 }
 
-/* Configuración Rápida */
 .quick-config {
     margin: 20px 0;
     padding: 20px;
@@ -525,8 +528,8 @@ h1 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
-    justify-content: center; /* centrar la cuadricula de opciones */
-    justify-items: center; /* centrar cada celda */
+    justify-content: center;
+    justify-items: center; 
     align-items: center;
 }
 
@@ -540,11 +543,10 @@ h1 {
     text-align: center;
     font-size: 1rem;
     font-weight: bold;
-    /* Asegurar que la etiqueta ajuste su ancho y no estire el fondo */
     white-space: normal;
     max-width: 220px;
     overflow-wrap: anywhere;
-    margin: 0 auto; /* centrar cada opción dentro de su columna */
+    margin: 0 auto; 
 }
 
 .mode-option:hover {
@@ -566,9 +568,7 @@ h1 {
     margin-top: 5px;
 }
 
-/* Help UI styles removed */
 
-/* Estilos para historial */
 .history-section {
     margin-top: 30px;
     padding: 20px;
@@ -689,7 +689,6 @@ h1 {
     }
 }
 
-/* Estilos para gráficas */
 .charts-section {
     margin-top: 30px;
     padding: 20px;
@@ -741,7 +740,7 @@ h1 {
 .stat-number {
     font-size: 2rem;
     font-weight: bold;
-    color: #007bff;
+    color: var(--primary-color);
     margin-bottom: 5px;
 }
 
@@ -760,7 +759,6 @@ h1 {
     }
 }
 
-/* Estilos para dataset de entrenamiento */
 .training-section {
     margin-top: 30px;
     padding: 20px;
@@ -872,7 +870,6 @@ h1 {
     }
 }
 
-/* Estilos para configuración */
 .setting-btn {
     padding: 12px 20px;
     border: 2px solid var(--border-color);
@@ -897,7 +894,6 @@ h1 {
     color: var(--text-primary);
 }
 
-/* Switch para tema */
 .theme-switch {
     position: relative;
     display: inline-block;
@@ -961,13 +957,11 @@ input:checked + .slider:before {
     font-weight: 500;
     color: var(--text-primary);
 }
-/* Asegurar que los mensajes de estado soporten saltos de línea y estén centrados */
 #status {
     white-space: pre-line;
     text-align: center;
 }
 
-/* Estilos para el menú desplegable de información de reciclaje */
 .recycling-info-dropdown {
     margin-top: 20px;
     border-radius: 12px;
@@ -979,7 +973,7 @@ input:checked + .slider:before {
 .info-toggle-btn {
     width: 100%;
     padding: 16px 20px;
-    background: linear-gradient(135deg, #91cb3e 0%, #53a548 100%);
+    background: linear-gradient(135deg, var(--celadon) 0%, var(--dark-pastel-green) 100%);
     color: white;
     border: none;
     font-size: 1.1rem;
@@ -993,7 +987,7 @@ input:checked + .slider:before {
 }
 
 .info-toggle-btn:hover {
-    background: linear-gradient(135deg, #7ab82f 0%, #459339 100%);
+    background: linear-gradient(135deg, var(--celadon-2) 0%, var(--pigment-green) 100%);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
@@ -1045,11 +1039,11 @@ input:checked + .slider:before {
 }
 
 .info-type-badge.reciclable {
-    background-color: #17a2b8;
+    background-color: var(--dark-pastel-green);
 }
 
 .info-type-badge.organico {
-    background-color: #28a745;
+    background-color: var(--malachite);
 }
 
 .info-type-badge.no-reciclable {
@@ -1128,7 +1122,6 @@ input:checked + .slider:before {
     }
 }
 
-/* Estilos para etiquetas de tipo de basura y botón de información */
 .waste-type-label {
     display: inline-block;
     padding: 6px 12px;
@@ -1160,9 +1153,6 @@ input:checked + .slider:before {
     color: white;
 }
 
-/* Estilos del botón de información eliminados - solo usar menú desplegable */
-
-/* Ocultar selector de cámaras y su label en escritorio; mostrar solo en móviles */
 .camera-config {
     display: none !important;
 }
@@ -1199,7 +1189,6 @@ input:checked + .slider:before {
     }
 }
 
-/* Responsive para etiquetas y botón */
 @media (max-width: 768px) {
     .waste-type-label {
         font-size: clamp(0.85rem, 3.2vw, 1rem);
@@ -1207,10 +1196,8 @@ input:checked + .slider:before {
         min-width: 110px;
     }
 
-    /* Estilos del botón de información eliminados */
 }
 
-/* Ajustes para el área de resultados: asegurar que el botón de clasificar también sea responsivo */
 .classify-btn {
     padding: clamp(10px, 2.2vw, 15px) clamp(14px, 3vw, 24px);
     font-size: clamp(0.95rem, 1.8vw, 1.05rem);

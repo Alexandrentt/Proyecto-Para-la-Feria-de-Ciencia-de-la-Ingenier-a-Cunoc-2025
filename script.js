@@ -1,20 +1,20 @@
 const MODEL_URL = './my_model/';
 let model, webcam, currentMode = 'webcam';
-let isWebcamActive = false; // indica si la webcam ya está inicializada y en play
+let isWebcamActive = false; 
 let isModelLoaded = false;
 let currentImageData = null;
-let webcamMode = 'capture';
-let currentView = 'home';
+let webcamMode = 'capture'; 
+let currentView = 'home'; 
 let isModalOpen = false;
 let lastTopPrediction = null;
-// Preferencia de cámara: 'environment' (trasera) o 'user' (frontal). Se puede cambiar desde la UI.
-let preferredFacing = 'environment'; // Por defecto usar cámara trasera
+// usamos la camara trasera, primer intento
+let preferredFacing = 'environment';
 
 async function initApp() {
     console.log(' Iniciando Clasificador de Basura');
     updateStatus('Verificando librerías...', 'loading');
 
-    // Verificar librerías
+    // esto verifica las librerias
     if (typeof tf === 'undefined') {
         updateStatus(' TensorFlow.js no cargado', 'error');
         return;
@@ -27,7 +27,7 @@ async function initApp() {
 
     console.log('Librerías cargadas correctamente');
 
-    // Cargar solo el modelo de clasificación
+    // Carga el modelo
     await loadModel();
 
     setupEventListeners();
@@ -39,11 +39,11 @@ async function initApp() {
         }, 300);
     }
     if (isModelLoaded && currentMode === 'webcam') {
-        console.log('Inicializando cámara automáticamente...');
-        setTimeout(async () => {
-            await initWebcam();
-        }, 500);
-    }
+    console.log('Inicializando cámara automáticamente...');
+    setTimeout(async () => {
+        await initWebcam();
+    }, 500);
+}
 
 }
 
@@ -51,7 +51,6 @@ async function loadModel() {
     try {
         updateStatus('Cargando modelo de Techable Machine');
 
-        // Verificar archivos del modelo
         const modelResponse = await fetch(MODEL_URL + 'model.json');
         if (!modelResponse.ok) {
             throw new Error('model.json no encontrado. Asegúrate de tener la carpeta my_model/ con los archivos del modelo.');
@@ -62,25 +61,24 @@ async function loadModel() {
             throw new Error('metadata.json no encontrado en la carpeta my_model/');
         }
 
-        // Cargar modelo
         model = await tmImage.load(MODEL_URL + 'model.json', MODEL_URL + 'metadata.json');
         console.log('Modelo cargado:', model);
 
         isModelLoaded = true;
         updateStatus('Modelo cargado correctamente', 'success');
 
-        if (typeof currentMode !== 'undefined' && currentMode === 'webcam') {
-            console.log('Modelo cargado, iniciando cámara automáticamente...');
-            setTimeout(async () => {
-                try {
-                    await initWebcam();
-                } catch (err) {
-                    console.error('Error iniciando webcam automáticamente:', err);
-                    updateStatus('Error al iniciar la cámara automáticamente', 'error');
-                }
-
-            }, 300); // pequeño retardo para asegurar que el DOM esté listo
+if (typeof currentMode !== 'undefined' && currentMode === 'webcam') {
+    console.log('Modelo cargado, iniciando cámara automáticamente...');
+    setTimeout(async () => {
+        try {
+            await initWebcam();
+        } catch (err) {
+            console.error('Error iniciando webcam automáticamente:', err);
+            updateStatus('Error al iniciar la cámara automáticamente', 'error');
         }
+
+    }, 300); 
+}
 
     } catch (error) {
         console.error(' Error cargando modelo:', error);
@@ -89,7 +87,7 @@ async function loadModel() {
     }
 }
 async function initWebcam() {
-    console.log('🎥 Iniciando cámara...');
+    console.log(' Iniciando cámara...');
 
     if (!isModelLoaded) {
         updateStatus('Modelo de basura no cargado', 'error');
@@ -104,41 +102,40 @@ async function initWebcam() {
     const video = document.getElementById('webcam');
     if (!video) return console.error("No se encontró el elemento <video>");
 
-    // Detener streams previos
     if (window.webcamStream) {
         window.webcamStream.getTracks().forEach(track => track.stop());
     }
 
-    // Detectar si es móvil o escritorio
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // Detectar si es telefono o computadora
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     console.log('Dispositivo detectado:', isMobile ? 'Móvil' : 'Escritorio');
 
     let stream = null;
     let cameraUsed = '';
 
-    // ESTRATEGIA 1: En móviles, forzar cámara trasera con facingMode exact
+    // ESTRATEGIA 1: En telefonos, forzar la cámara trasera con facingMode exact
     if (isMobile) {
-        console.log('📱 Móvil detectado - Forzando cámara trasera con facingMode: environment');
+        console.log(' Móvil detectado - Forzando cámara trasera con facingMode: environment');
         try {
             stream = await navigator.mediaDevices.getUserMedia({
-                video: {
+            video: {
                     facingMode: { exact: 'environment' },
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
-                }
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            }
             });
             cameraUsed = 'Trasera (móvil)';
-            console.log('✅ Cámara trasera activada en móvil');
+            console.log(' Cámara trasera activada en móvil');
         } catch (error) {
-            console.warn('❌ No se pudo usar facingMode environment en móvil:', error);
+            console.warn(' No se pudo usar facingMode environment en móvil:', error);
         }
     }
 
-    // ESTRATEGIA 2: Buscar cámara trasera por etiquetas (móvil y escritorio)
+    // ESTRATEGIA 2: Buscar cámara trasera por etiquetas (telefono y computadora)
     if (!stream) {
         console.log('🔍 Buscando cámara trasera por etiquetas...');
-        try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
             const videoDevices = devices.filter(d => d.kind === 'videoinput');
 
             // Buscar cámara trasera por etiquetas
@@ -148,7 +145,7 @@ async function initWebcam() {
             });
 
             if (backCamera) {
-                console.log('📷 Cámara trasera encontrada:', backCamera.label);
+                console.log('Cámara trasera encontrada:', backCamera.label);
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: {
                         deviceId: { exact: backCamera.deviceId },
@@ -157,14 +154,14 @@ async function initWebcam() {
                     }
                 });
                 cameraUsed = `Trasera (${backCamera.label})`;
-                console.log('✅ Cámara trasera activada por deviceId');
+                console.log('Cámara trasera activada por deviceId');
             }
         } catch (error) {
-            console.warn('❌ Error buscando cámara trasera por etiquetas:', error);
+            console.warn('Error buscando cámara trasera por etiquetas:', error);
         }
     }
 
-    // ESTRATEGIA 3: Fallback - intentar facingMode environment ideal
+    // ESTRATEGIA 3: 
     if (!stream) {
         console.log('🔄 Fallback: Intentando facingMode environment ideal...');
         try {
@@ -175,14 +172,14 @@ async function initWebcam() {
                     height: { ideal: 1080 }
                 }
             });
-            cameraUsed = 'Trasera (fallback)';
+            cameraUsed = 'Camara';
             console.log('✅ Cámara trasera activada (fallback)');
         } catch (error) {
             console.warn('❌ Fallback environment falló:', error);
         }
     }
 
-    // ESTRATEGIA 4: Último recurso - cámara frontal (solo en escritorio)
+    // ESTRATEGIA 4: Último recurso, la cámara frontal (solo en computadora)
     if (!stream && !isMobile) {
         console.log('🔄 Último recurso: Usando cámara frontal en escritorio...');
         try {
@@ -194,9 +191,9 @@ async function initWebcam() {
                 }
             });
             cameraUsed = 'Frontal (último recurso)';
-            console.log('✅ Cámara frontal activada como último recurso');
+            console.log(' Cámara frontal activada como último recurso');
         } catch (error) {
-            console.error('❌ No se pudo acceder a ninguna cámara:', error);
+            console.error(' No se pudo acceder a ninguna cámara:', error);
             alert("No se pudo acceder a la cámara. Revisa los permisos.");
             return;
         }
@@ -204,7 +201,7 @@ async function initWebcam() {
 
     // Si no se pudo obtener ninguna cámara
     if (!stream) {
-        console.error('❌ No se pudo acceder a ninguna cámara');
+        console.error('No se pudo acceder a ninguna cámara');
         alert("No se pudo acceder a la cámara. Revisa los permisos.");
         return;
     }
@@ -212,8 +209,7 @@ async function initWebcam() {
     // Configurar el video
     window.webcamStream = stream;
     video.srcObject = stream;
-    video.style.transform = "none"; // Sin espejo para cámara trasera
-
+    video.style.transform = "none"; 
     await new Promise(resolve => {
         video.onloadedmetadata = () => {
             video.play();
@@ -222,17 +218,15 @@ async function initWebcam() {
     });
 
     // Crear webcam para tmImage
-    const flip = false; // No flip para cámara trasera
+    const flip = false;
     webcam = new tmImage.Webcam(640, 480, flip);
 
-    // Configurar canvas y ocultar el elemento <video> para evitar duplicado visual
     const canvas = document.getElementById('webcam-canvas');
     if (canvas) {
         canvas.width = video.videoWidth || 640;
         canvas.height = video.videoHeight || 480;
         canvas.style.display = 'block';
     }
-    // Ocultar el elemento de video, ya que usamos el canvas para mostrar
     if (video) {
         video.style.display = 'none';
     }
@@ -240,48 +234,17 @@ async function initWebcam() {
     isWebcamActive = true;
 
     let statusMessage = `📷 ${cameraUsed} activa`;
-    if (webcamMode === 'continuous') {
+        if (webcamMode === 'continuous') {
         statusMessage += ' - Muestra un objeto para clasificar';
-    } else {
+        } else {
         statusMessage += ' - Presiona "Capturar" para analizar';
-    }
-    updateStatus(statusMessage, 'success');
-
-    // Iniciar predicción
-    predictWebcam();
-}
-
-// Permite al usuario cambiar entre cámara frontal y trasera
-function setCameraFacing(facing) {
-    if (facing !== 'user' && facing !== 'environment') return;
-    preferredFacing = facing;
-
-    // Actualizar estilos de botones
-    const rearBtn = document.getElementById('rear-camera-btn');
-    const frontBtn = document.getElementById('front-camera-btn');
-    if (rearBtn) rearBtn.classList.toggle('active', facing === 'environment');
-    if (frontBtn) frontBtn.classList.toggle('active', facing === 'user');
-
-    // Si la webcam está activa, reiniciarla para aplicar la preferencia
-    if (isWebcamActive && currentMode === 'webcam') {
-        try {
-            // Detener la webcam actual
-            if (webcam) {
-                if (typeof webcam.stop === 'function') webcam.stop();
-                if (webcam.video && webcam.video.srcObject) {
-                    const tracks = webcam.video.srcObject.getTracks();
-                    tracks.forEach(t => t.stop());
-                }
-            }
-        } catch (e) {
-            console.warn('Error al detener webcam antes de reiniciar:', e);
         }
-        webcam = null;
-        isWebcamActive = false;
-        // Re-iniciar la webcam con la nueva preferencia
-        setTimeout(() => initWebcam(), 200);
-    }
+        updateStatus(statusMessage, 'success');
+
+            predictWebcam();
 }
+
+
 
 async function predictWebcam() {
     if (currentMode !== 'webcam') return;
@@ -305,8 +268,8 @@ async function predictWebcam() {
 
     if (webcamMode === 'continuous') {
         currentImageData = canvas.toDataURL('image/jpeg', 0.8);
-        const predictions = await model.predict(canvas);
-        displayPrediction(predictions);
+            const predictions = await model.predict(canvas);
+            displayPrediction(predictions);
     }
 
     requestAnimationFrame(predictWebcam);
@@ -361,10 +324,10 @@ function setupEventListeners() {
 
 function switchMode(mode) {
     currentMode = mode;
-
+    
     // Limpiar resultados al cambiar de modo
     clearResults();
-
+    
     // Ocultar menú desplegable de información si está abierto
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
@@ -624,7 +587,7 @@ function setWebcamMode(mode) {
     webcamMode = mode;
 
     clearResults();
-
+    
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
     if (recyclingContent) recyclingContent.classList.remove('show');
@@ -677,7 +640,7 @@ async function captureAndClassify() {
         console.error('Error en captura y clasificación:', error);
         updateStatus(' Error al procesar imagen', 'error');
     }
-
+    
 }
 const recyclingInfo = {
     'lata': {
@@ -899,21 +862,21 @@ const recyclingInfo = {
             'Asegúrate de que esté seco y limpio para mejorar su reciclaje.'
         ]
     },
-    'papel': {
-        type: 'reciclable',
-        title: 'Papel y Cartón',
-        description: 'Papel y cartón limpios y secos son materiales reciclables que se procesan para fabricar nuevos productos de papel.',
-        instructions: [
-            'Retira restos de comida y plásticos adheridos',
-            'Aplasta las cajas y dóblalas para ahorrar espacio',
-            'Deposítalo en el contenedor azul o el contenedor de papel y cartón de tu municipio',
-            'No incluyas papel encerado o cartón con tratamiento plástico'
-        ],
-        tips: [
-            'El papel debe estar seco y limpio para ser reciclable',
-            'Reutiliza cajas cuando sea posible antes de reciclarlas',
-            'Evita mezclar papel con residuos orgánicos o plásticos'
-        ]
+      'papel': {
+    type: 'reciclable',
+    title: 'Papel y Cartón',
+    description: 'Papel y cartón limpios y secos son materiales reciclables que se procesan para fabricar nuevos productos de papel.',
+    instructions: [
+        'Retira restos de comida y plásticos adheridos',
+        'Aplasta las cajas y dóblalas para ahorrar espacio',
+        'Deposítalo en el contenedor azul o el contenedor de papel y cartón de tu municipio',
+        'No incluyas papel encerado o cartón con tratamiento plástico'
+    ],
+    tips: [
+        'El papel debe estar seco y limpio para ser reciclable',
+        'Reutiliza cajas cuando sea posible antes de reciclarlas',
+        'Evita mezclar papel con residuos orgánicos o plásticos'
+    ]
     },
     'merma': {
         type: 'merma',
@@ -966,7 +929,7 @@ function getWasteType(label) {
 function toggleRecyclingInfo() {
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
-
+    
     if (recyclingContent.classList.contains('show')) {
         recyclingContent.classList.remove('show');
         toggleBtn.classList.remove('active');
@@ -1053,10 +1016,10 @@ function updateRecyclingInfo(label) {
 function clearResults() {
     const pred = document.getElementById('prediction');
     const conf = document.getElementById('confidence');
-
+    
     if (pred) pred.textContent = 'Esperando clasificación...';
     if (conf) conf.textContent = '';
-
+    
     lastTopPrediction = null;
     // Restaurar guía general en el menú de reciclaje
     try {
@@ -1064,7 +1027,7 @@ function clearResults() {
     } catch (e) {
         console.warn('clearResults: no se pudo actualizar recycling info:', e);
     }
-
+    
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
     if (recyclingContent) recyclingContent.classList.remove('show');
