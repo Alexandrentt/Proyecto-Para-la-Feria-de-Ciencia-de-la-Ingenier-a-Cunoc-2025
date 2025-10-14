@@ -88,50 +88,278 @@ if (typeof currentMode !== 'undefined' && currentMode === 'webcam') {
         isModelLoaded = false;
     }
 }
-async function initWebcam() {
-    const video = document.getElementById('webcam');
-    if (!video) return console.error("No se encontró el elemento <video>");
 
-    // Detener streams previos
-    if (window.webcamStream) {
-        window.webcamStream.getTracks().forEach(track => track.stop());
+async function initWebcam() {
+    console.log('initWebcam: entrando');
+    // Debug rápido: imprimir estados
+    console.log('initWebcam -> isModelLoaded:', isModelLoaded, ' isWebcamActive:', isWebcamActive, ' currentMode:', currentMode);
+
+    if (!isModelLoaded) {
+        updateStatus('Modelo de basura no cargado', 'error');
+        console.warn('initWebcam: modelo no cargado, abortando');
+        return;
     }
 
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(d => d.kind === 'videoinput');
-
-    // Buscar una cámara trasera por nombre
-    let backCamera = videoDevices.find(d =>
-        /back|rear|environment/i.test(d.label)
-    );
-
-    // Si no hay etiqueta (antes de permisos), intentar environment
-    let constraints = backCamera
-        ? { video: { deviceId: { exact: backCamera.deviceId } } }
-        : { video: { facingMode: { ideal: "environment" } } };
+    // Si ya fue marcada activa, evitar reiniciar (pero hacemos una verificación extra).
+    if (isWebcamActive && webcam && webcam.playing) {
+        console.log('initWebcam: webcam ya activa y en play, saliendo');
+        return;
+    }
 
     try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        window.webcamStream = stream;
-        video.srcObject = stream;
-        video.style.transform = "none"; // sin espejo
+        updateStatus('🎥 Iniciando cámara...', 'loading');
 
-        await new Promise(r => video.onloadedmetadata = r);
-        video.play();
-        console.log(`✅ Cámara usada: ${backCamera ? backCamera.label : "predeterminada (environment)"}`);
-    } catch (err) {
-        console.warn("No se pudo usar la cámara trasera, usando la frontal…", err);
+        // Asegurar que el canvas existe en el DOM (evita race conditions)
+        const canvas = document.getElementById('webcam-canvas');
+        if (!canvas) {
+            // Esperar al próximo repaint y buscar de nuevo
+            console.warn('initWebcam: canvas no disponible, esperando repaint');
+            await new Promise(res => requestAnimationFrame(res));
+            await new Promise(res => setTimeout(res, 150));
+        }
+
+        // Forzar uso de cámara trasera por defecto (environment) a menos que el usuario haya elegido lo contrario.
+        // Esto aplica en móviles y escritorio: siempre intentamos seleccionar una cámara trasera primero.
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        // Construir constraints iniciales (pedimos resolución alta ideal)
+        let constraints = {
+            video: {
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            }
+        };
+
+        // Intentar obtener deviceId de una cámara trasera disponible (no limitar solo a móviles)
+        let selectedDeviceId = null;
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoInputs = devices.filter(d => d.kind === 'videoinput');
+
+                // Buscar por etiquetas comunes de cámara trasera
+                const rearRegex = /back|rear|traser|trasera|environment|camara trasera|rear camera/i;
+                const found = videoInputs.find(d => d.label && rearRegex.test(d.label));
+                if (found) {
+                    selectedDeviceId = found.deviceId;
+                    console.log('initWebcam: cámara trasera detectada por label:', found.label);
+                } else {
+                    // Si no hay label (posiblemente sin permisos), solicitar temporalmente facingMode=environment
+                    try {
+                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: 640, height: 480 } });
+                        const track = tempStream.getVideoTracks()[0];
+                        const settings = track.getSettings && track.getSettings();
+                        if (settings && settings.deviceId) {
+                            selectedDeviceId = settings.deviceId;
+                            console.log('initWebcam: obtuvo deviceId tras permiso temporal:', selectedDeviceId);
+                        }
+                        // detener stream temporal
+                        track.stop();
+                    } catch (permErr) {
+                        console.warn('initWebcam: no se pudo obtener permiso temporal con facingMode=environment:', permErr);
+                    }
+                }
+            } catch (enumErr) {
+                console.warn('initWebcam: enumerateDevices falló:', enumErr);
+            }
+        }
+
+        if (selectedDeviceId) {
+            constraints.video.deviceId = { exact: selectedDeviceId };
+        } else {
+            // Fallback: en móviles forzamos facingMode 'environment' para priorizar la trasera.
+            if (isMobile) {
+                constraints.video.facingMode = { exact: 'environment' };
+            } else {
+                // En escritorio, usar la preferencia si existe, sino preferir 'user'
+                const facingToUse = preferredFacing || 'user';
+                constraints.video.facingMode = { ideal: facingToUse };
+            }
+        }
+
+    // Crear webcam (tmImage.Webcam)
+    // No hacemos flip por defecto: preferimos mostrar la imagen tal cual (evita efecto espejo que puede confundirte)
+    const flip = false;
+    webcam = new tmImage.Webcam(640, 480, flip);
+
         try {
-            const fallback = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            window.webcamStream = fallback;
-            video.srcObject = fallback;
-            video.style.transform = "none";
-            await new Promise(r => video.onloadedmetadata = r);
-            video.play();
-            console.log("✅ Cámara frontal activada como respaldo");
-        } catch (e2) {
-            console.error("❌ No se pudo acceder a ninguna cámara:", e2);
-            alert("No se pudo acceder a la cámara. Revisa los permisos.");
+            // Intento normal con la API de la librería
+            console.log('initWebcam: intentando webcam.setup() con tmImage.Webcam');
+            await webcam.setup(constraints);
+            await webcam.play();
+            console.log('initWebcam: tmImage.Webcam.setup/play OK');
+        } catch (libError) {
+            // Fallback: intentar abrir la cámara directamente para diagnosticar permisos/constraints
+            console.warn('initWebcam: tmImage.Webcam.setup falló, intentando fallback getUserMedia', libError);
+            updateStatus('Intentando abrir cámara (fallback)...', 'loading');
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw libError; // rethrow si no hay fallback posible
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            // Si tmImage.Webcam tiene video interno, asignarle el stream manualmente
+            if (webcam && webcam.video) {
+                webcam.video.srcObject = stream;
+                await webcam.video.play();
+                // tmImage.Webcam internamente podría requerir `webcam.update()` later; seguiremos igualmente.
+            } else {
+                // Si no, creamos un elemento <video> temporal y lo ponemos en webcam.canvas (solo para diagnóstico)
+                const videoTemp = document.createElement('video');
+                videoTemp.autoplay = true;
+                videoTemp.playsInline = true;
+                videoTemp.srcObject = stream;
+                await new Promise(res => {
+                    videoTemp.onloadedmetadata = () => {
+                        videoTemp.play();
+                        res();
+                    };
+                });
+                // crear un objeto mínimo para usar sus canvas en predictWebcam
+                webcam = { canvas: document.createElement('canvas'), video: videoTemp, update: () => {}, playing: true };
+                webcam.canvas.width = videoTemp.videoWidth || 640;
+                webcam.canvas.height = videoTemp.videoHeight || 480;
+            }
+        }
+
+        // Si llegamos aquí, consideramos la webcam en play
+        // Comprobar si realmente se abrió la cámara trasera; si no, intentar con otra cámara disponible.
+        let actuallyFront = false;
+        try {
+            const activeStream = webcam && webcam.video && webcam.video.srcObject;
+            if (activeStream) {
+                const track = activeStream.getVideoTracks()[0];
+                const settings = track.getSettings && track.getSettings();
+                const label = track.label || '';
+                // Algunos navegadores devuelven facingMode en settings
+                if (settings && settings.facingMode) {
+                    actuallyFront = settings.facingMode === 'user' || settings.facingMode === 'front';
+                } else {
+                    // Fallback: inferir por label si contiene palabras comunes
+                    const frontRegex = /front|user|selfie|frontal/i;
+                    actuallyFront = frontRegex.test(label);
+                }
+                console.log('initWebcam: cámara activa label/settings:', label, settings, ' actuallyFront=', actuallyFront);
+            }
+        } catch (e) {
+            console.warn('initWebcam: no se pudo determinar facingMode del track:', e);
+        }
+
+        // Si detectamos que por alguna razón se abrió la frontal, intentamos seleccionar otra cámara (trasera) si existe
+        if (actuallyFront && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoInputs = devices.filter(d => d.kind === 'videoinput');
+                const frontRegex = /front|user|selfie|frontal/i;
+                const rearCandidate = videoInputs.find(d => d.label && !frontRegex.test(d.label));
+                if (rearCandidate) {
+                    console.log('initWebcam: se detectó frontal. Reintentando con candidate trasera:', rearCandidate.label || rearCandidate.deviceId);
+                    // Detener stream actual
+                    try {
+                        if (webcam && typeof webcam.stop === 'function') webcam.stop();
+                        if (webcam && webcam.video && webcam.video.srcObject) {
+                            const tracks = webcam.video.srcObject.getTracks();
+                            tracks.forEach(t => t.stop());
+                        }
+                    } catch (stopErr) {
+                        console.warn('initWebcam: error deteniendo stream antes de reintentar:', stopErr);
+                    }
+
+                    // Forzar deviceId al candidate trasera y reiniciar webcam una única vez
+                    constraints.video.deviceId = { exact: rearCandidate.deviceId };
+                    // Ajustar flip acorde (trasera no debe flipearse)
+                    const flipRetry = false; // trasera -> no flip
+                    webcam = new tmImage.Webcam(640, 480, flipRetry);
+                    await webcam.setup(constraints);
+                    await webcam.play();
+                    // actualizar canvas/video
+                    const finalCanvasRetry = document.getElementById('webcam-canvas');
+                    if (finalCanvasRetry && webcam && webcam.video) {
+                        const vw = webcam.video.videoWidth || webcam.canvas && webcam.canvas.width || 640;
+                        const vh = webcam.video.videoHeight || webcam.canvas && webcam.canvas.height || 480;
+                        finalCanvasRetry.width = vw;
+                        finalCanvasRetry.height = vh;
+                        finalCanvasRetry.style.display = 'block';
+                        if (webcam.canvas) {
+                            webcam.canvas.width = vw;
+                            webcam.canvas.height = vh;
+                        }
+                    }
+                    console.log('initWebcam: reintento con cámara trasera realizado');
+                } else {
+                    console.log('initWebcam: no se encontró una cámara trasera alternativa para reintentar');
+                }
+            } catch (retryErr) {
+                console.warn('initWebcam: error al enumerar/reintentar con cámara trasera:', retryErr);
+            }
+        }
+
+        isWebcamActive = true;
+        console.log('initWebcam: isWebcamActive = true');
+
+        // Mostrar canvas (de nuevo por si estuvo ausente)
+        const finalCanvas = document.getElementById('webcam-canvas');
+            if (finalCanvas && webcam && webcam.video) {
+                // Ajustar el canvas al tamaño real del stream para mantener resolución máxima
+                const vw = webcam.video.videoWidth || webcam.canvas && webcam.canvas.width || 640;
+                const vh = webcam.video.videoHeight || webcam.canvas && webcam.canvas.height || 480;
+                finalCanvas.width = vw;
+                finalCanvas.height = vh;
+                finalCanvas.style.display = 'block';
+                // Si la librería creó su propio canvas más pequeño, mantenerlo consistente
+                if (webcam.canvas) {
+                    webcam.canvas.width = vw;
+                    webcam.canvas.height = vh;
+                }
+            } else if (finalCanvas && webcam && webcam.canvas) {
+                finalCanvas.width = webcam.canvas.width || 640;
+                finalCanvas.height = webcam.canvas.height || 480;
+                finalCanvas.style.display = 'block';
+            } else {
+                console.warn('initWebcam: canvas final no encontrado o webcam.canvas ausente');
+            }
+
+        let statusMessage = ' Cámara activa';
+        if (webcamMode === 'continuous') {
+            statusMessage += ' - Muestra un objeto para clasificar \n Asegurate de que el fondo sea claro';
+        } else {
+            statusMessage += ' - Presiona "Capturar" para analizar \n Asegurate de que el fondo sea claro';
+        }
+        updateStatus(statusMessage, 'success');
+
+        // iniciar loop de predicción (no bloqueante)
+        try {
+            predictWebcam();
+        } catch (e) {
+            console.warn('initWebcam: predictWebcam lanzó excepción (no crítico)', e);
+        }
+
+    } catch (error) {
+        console.error(' Error con webcam (detalle):', error);
+        let errorMsg = ' Error de cámara: ';
+        if (error && error.name) {
+            if (error.name === 'NotAllowedError') {
+                errorMsg += 'Permisos denegados. Permite el acceso a la cámara.';
+            } else if (error.name === 'NotFoundError') {
+                errorMsg += 'No se encontró cámara conectada.';
+            } else if (error.name === 'NotReadableError') {
+                errorMsg += 'Cámara en uso por otra aplicación.';
+            } else {
+                errorMsg += error.message || String(error);
+            }
+        } else {
+            errorMsg += String(error);
+        }
+        updateStatus(errorMsg, 'error');
+
+        // Para depuración adicional, muestra en consola la lista de dispositivos disponibles
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                console.log('Dispositivos multimedia detectados:', devices);
+            } catch (devErr) {
+                console.warn('No se pudo enumerar dispositivos:', devErr);
+            }
         }
     }
 }
