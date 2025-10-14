@@ -6,19 +6,19 @@ SARB (Sistema Automático de Reconocimiento de Basura) es un sistema inteligente
 
 ##  Características Principales
 
-- ** Clasificación en Tiempo Real**: Utiliza la webcam para identificar objetos instantáneamente
-- ** Modo de Captura**: Permite tomar fotografías individuales para análisis detallado
-- ** Carga de Imágenes**: Soporta la clasificación de imágenes desde archivos locales
-- ** 13 Categorías de Residuos**:
+- Clasificación en Tiempo Real**: Utiliza la webcam para identificar objetos instantáneamente
+- Modo de Captura**: Permite tomar fotografías individuales para análisis detallado
+- Carga de Imágenes**: Soporta la clasificación de imágenes desde archivos locales
+- 13 Categorías de Residuos**:
   - **Reciclables**: Lata, Botella (plástico), Botella de vidrio, Caja de jugo, Caja de pizza, Papel/Cartón
   - **Orgánicos**: Manzana, Banano, Limón, Huevo (cáscara), Piña
   - **No Reciclables**: Plato (duroport), Vaso (duroport)
   - **Merma**: Basura sin valor de reciclaje
-- ** Información Detallada de Reciclaje**: Instrucciones específicas para cada tipo de residuo
-- ** Confianza de Predicción**: Muestra el porcentaje de certeza en cada clasificación
-- ** Diseño Responsivo**: Optimizado para dispositivos móviles y escritorio
-- ** Interfaz Moderna**: Diseño limpio con paleta de colores verde ecológica
-- ** Modos de Operación**: Continuo (clasificación automática) y Captura (análisis individual)
+- Información Detallada de Reciclaje**: Instrucciones específicas para cada tipo de residuo
+- Confianza de Predicción**: Muestra el porcentaje de certeza en cada clasificación
+- Diseño Responsivo**: Optimizado para dispositivos móviles y escritorio
+- Interfaz Moderna**: Diseño limpio con paleta de colores verde ecológica
+- Modos de Operación**: Continuo (clasificación automática) y Captura (análisis individual)
 
 ##  Stack Tecnológico
 
