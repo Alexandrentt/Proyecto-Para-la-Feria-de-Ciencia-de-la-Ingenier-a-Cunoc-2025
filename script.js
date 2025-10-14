@@ -655,19 +655,9 @@ function renderTopPrediction(topPrediction) {
     // Mostrar resultado solo si la confianza alcanza el umbral
     const confidenceNum = parseFloat(confidence);
     if (!isNaN(confidenceNum) && confidenceNum >= 90) {
-        // Confianza suficiente: mostrar etiqueta, tipo y botón de información
+        // Confianza suficiente: mostrar etiqueta y tipo
         predictionDiv.appendChild(resultEl);
         predictionDiv.appendChild(typeEl);
-
-        // Solo mostrar botón de información en modo webcam con captura
-        if (currentMode === 'webcam' && webcamMode === 'capture') {
-            const infoBtn = document.createElement('button');
-            infoBtn.className = 'info-btn';
-            infoBtn.classList.add('custom-highlight');
-            infoBtn.textContent = 'Información';
-            infoBtn.addEventListener('click', () => showRecyclingInfo(topPrediction.className));
-            predictionDiv.appendChild(infoBtn);
-        }
 
         // Actualizar el contenido del menú desplegable automáticamente (solo con confianza alta)
         updateRecyclingInfo(topPrediction.className);
@@ -1128,7 +1118,7 @@ function updateRecyclingInfo(label) {
         } else if (wasteInfo.type === 'organico') {
             typeElement.textContent = '🌱 Orgánico';
         } else if (wasteInfo.type === 'info') {
-            typeElement.textContent = 'ℹ️ Guía';
+            typeElement.textContent = '';
         } else {
             typeElement.textContent = '❌ No Reciclable';
         }
