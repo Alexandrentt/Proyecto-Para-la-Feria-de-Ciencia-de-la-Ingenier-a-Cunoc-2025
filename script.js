@@ -667,6 +667,7 @@ function formatLabel(className) {
     if (label.includes('vaso')) return 'Vaso (duroport)';
     if (label.includes('jugo')) return 'Caja de jugo (cartón)';
     if (label.includes('pizza')) return 'Caja de pizza (cartón)';
+    if (label.includes('papel') || label.includes('carton') || label.includes('cartón')) return 'Papel / Cartón';
     if (label.includes('organico')) return 'Orgánico';
     if (label.includes('manzana')) return 'Manzana';
     if (label.includes('banano') || label.includes('banana')) return 'Banano';
@@ -1026,6 +1027,24 @@ const recyclingInfo = {
             'Consulta con expertos en reciclaje para objetos desconocidos'
         ]
     }
+};
+
+// Añadimos información para la etiqueta 'papel' directamente en el objeto de reciclaje
+recyclingInfo['papel'] = {
+    type: 'reciclable',
+    title: 'Papel y Cartón',
+    description: 'Papel y cartón limpios y secos son materiales reciclables que se procesan para fabricar nuevos productos de papel.',
+    instructions: [
+        'Retira restos de comida y plásticos adheridos',
+        'Aplasta las cajas y dóblalas para ahorrar espacio',
+        'Deposítalo en el contenedor azul o el contenedor de papel y cartón de tu municipio',
+        'No incluyas papel encerado o cartón con tratamiento plástico'
+    ],
+    tips: [
+        'El papel debe estar seco y limpio para ser reciclable',
+        'Reutiliza cajas cuando sea posible antes de reciclarlas',
+        'Evita mezclar papel con residuos orgánicos o plásticos'
+    ]
 };
 
 // Función para determinar el tipo de basura según la etiqueta
