@@ -167,14 +167,19 @@ async function initWebcam() {
         if (selectedDeviceId) {
             constraints.video.deviceId = { exact: selectedDeviceId };
         } else {
-            // Fallback: usa facingMode igual a la preferencia (por defecto 'environment') para intentar la trasera
-            const facingToUse = preferredFacing || 'environment';
-            constraints.video.facingMode = { ideal: facingToUse };
+            // Fallback: en móviles forzamos facingMode 'environment' para priorizar la trasera.
+            if (isMobile) {
+                constraints.video.facingMode = { exact: 'environment' };
+            } else {
+                // En escritorio, usar la preferencia si existe, sino preferir 'user'
+                const facingToUse = preferredFacing || 'user';
+                constraints.video.facingMode = { ideal: facingToUse };
+            }
         }
 
     // Crear webcam (tmImage.Webcam)
-    // Si usamos la cámara frontal (user) debemos hacer flip true para que el video no se vea espejo
-    const flip = (preferredFacing === 'user');
+    // No hacemos flip por defecto: preferimos mostrar la imagen tal cual (evita efecto espejo que puede confundirte)
+    const flip = false;
     webcam = new tmImage.Webcam(640, 480, flip);
 
         try {
@@ -591,8 +596,15 @@ function displayPrediction(predictions) {
         current.probability > max.probability ? current : max
     );
 
-    // Guardar la última predicción (para que el modal muestre la info del objeto cuando se abrió)
-    lastTopPrediction = { ...topPrediction };
+    // Determinar la confianza en porcentaje
+    const confidencePercent = (topPrediction.probability * 100);
+
+    // Guardar la última predicción SOLO si la confianza es alta (>= 90%). En caso contrario, mantener null
+    if (!isNaN(confidencePercent) && confidencePercent >= 90) {
+        lastTopPrediction = { ...topPrediction };
+    } else {
+        lastTopPrediction = null;
+    }
 
     // Si el modal está abierto, no actualizar la UI (evitar que cambie mientras el usuario lee)
     if (isModalOpen) {
@@ -649,6 +661,8 @@ function renderTopPrediction(topPrediction) {
         unknownBadge.className = 'unknown-badge';
         unknownBadge.textContent = 'El modelo no fue entrenado para reconocer este objeto en específico.';
         predictionDiv.appendChild(unknownBadge);
+        // Mostrar la guía general en el menú desplegable cuando la predicción no es fiable
+        updateRecyclingInfo(null);
     }
 
     const confEl = document.getElementById('confidence');
@@ -679,7 +693,6 @@ function formatLabel(className) {
     return `${className}`;
 }
 
-    
 
 function updateStatus(message, type) {
     const statusEl = document.getElementById('status');
@@ -691,66 +704,39 @@ function updateStatus(message, type) {
     console.log(message);
 }
 
-// Funciones para navegación
-function toggleMenu() {
-    const menu = document.getElementById('dropdown-menu');
-    menu.classList.toggle('show');
-}
 
-function showSection(sectionName) {
-    // Si ya estamos en la sección, no hacer nada
-    if (currentView === sectionName) {
-        document.getElementById('dropdown-menu').classList.remove('show');
+function showSection(sectionId) {
+    // Oculta todas las secciones
+    document.querySelectorAll('.section').forEach(section => {
+        section.classList.add('hidden');
+    });
+
+    // Muestra la sección seleccionada
+    const selectedSection = document.getElementById(sectionId);
+    if (selectedSection) {
+        selectedSection.classList.remove('hidden');
+    } else {
+        console.error(`No se encontró la sección con id: ${sectionId}`);
         return;
     }
 
-    // Ocultar vista actual
-    const currentViewEl = document.getElementById(currentView + '-view');
-    if (currentViewEl) {
-        currentViewEl.classList.remove('active');
-        setTimeout(() => {
-            currentViewEl.style.display = 'none';
-        }, 300); // Esperar a que termine la animación
-    }
+    // Limpia resultados y previsualizaciones
+    const resultContainer = document.getElementById('result');
+    const preview = document.getElementById('imagePreview');
+    if (resultContainer) resultContainer.textContent = '';
+    if (preview) preview.src = '';
 
-    // Mostrar nueva vista
-    const targetView = document.getElementById(sectionName + '-view');
-    if (targetView) {
-        targetView.style.display = 'block';
-        setTimeout(() => {
-            targetView.classList.add('active');
-        }, 50);
-
-        currentView = sectionName;
-
-        // Actualizar gráficas si es necesario
-        if (sectionName === 'charts') {
-            setTimeout(() => {
-                updateCharts();
-            }, 350);
-        }
-
-        // Actualizar título de la página
-        updatePageTitle(sectionName);
-    }
-
-    // Ocultar menú
-    document.getElementById('dropdown-menu').classList.remove('show');
-}
-
-function updatePageTitle(sectionName) {
-    const titles = {
-        'home': '♻️ Clasificador de Basura IA',
-        'history': '📊 Historial de Clasificaciones',
-        'charts': '📈 Estadísticas',
-        'training': '🧠 Dataset de Entrenamiento'
-    };
-
-    const header = document.querySelector(`#${sectionName}-view header h1`);
-    if (header && titles[sectionName]) {
-        header.textContent = titles[sectionName];
+    // Lógica según la sección activa
+    if (sectionId === 'webcam-section') {
+        // Inicia la cámara automáticamente al entrar
+        initWebcam();
+    } else if (sectionId === 'upload-section') {
+        // Detiene la cámara al cambiar a subir imagen
+        stopWebcam();
     }
 }
+
+
 
 function setWebcamMode(mode) {
     webcamMode = mode;
@@ -802,11 +788,10 @@ async function captureAndClassify() {
 
     } catch (error) {
         console.error('Error en captura y clasificación:', error);
-        updateStatus('❌ Error al procesar imagen', 'error');
+        updateStatus(' Error al procesar imagen', 'error');
     }
     
 }
-// Base de datos de información de reciclaje
 const recyclingInfo = {
     'lata': {
         type: 'reciclable',
@@ -1026,11 +1011,8 @@ const recyclingInfo = {
             'Toma una foto más clara para mejor identificación',
             'Consulta con expertos en reciclaje para objetos desconocidos'
         ]
-    }
-};
-
-// Añadimos información para la etiqueta 'papel' directamente en el objeto de reciclaje
-recyclingInfo['papel'] = {
+    },
+      'papel': {
     type: 'reciclable',
     title: 'Papel y Cartón',
     description: 'Papel y cartón limpios y secos son materiales reciclables que se procesan para fabricar nuevos productos de papel.',
@@ -1045,6 +1027,7 @@ recyclingInfo['papel'] = {
         'Reutiliza cajas cuando sea posible antes de reciclarlas',
         'Evita mezclar papel con residuos orgánicos o plásticos'
     ]
+}
 };
 
 // Función para determinar el tipo de basura según la etiqueta
@@ -1082,10 +1065,10 @@ function toggleRecyclingInfo() {
         recyclingContent.classList.remove('show');
         toggleBtn.classList.remove('active');
     } else {
-        // Actualizar contenido antes de mostrar
-        if (lastTopPrediction && lastTopPrediction.className) {
-            updateRecyclingInfo(lastTopPrediction.className);
-        }
+
+        // Si hay una última predicción válida, mostrar su información; si no, mostrar guía general de reciclaje
+        const labelToShow = lastTopPrediction && lastTopPrediction.className ? lastTopPrediction.className : null;
+        updateRecyclingInfo(labelToShow);
         recyclingContent.classList.add('show');
         toggleBtn.classList.add('active');
     }
@@ -1093,18 +1076,51 @@ function toggleRecyclingInfo() {
 
 // Función para actualizar el contenido del menú desplegable
 function updateRecyclingInfo(label) {
-    const wasteInfo = getWasteType(label);
+    let wasteInfo;
+
+    if (!label) {
+        // Contenido por defecto cuando no hay predicción: guía básica de reciclaje
+        wasteInfo = {
+            type: 'info',
+            title: 'Esperando clasificación',
+            description: 'Coloca el objeto frente a la cámara o sube una imagen para obtener instrucciones específicas de reciclaje. Mientras esperas, aquí tienes una guía práctica de reciclaje universal:',
+            instructions: [
+                'Separa los residuos por tipo: papel/cartón, plástico, vidrio, metal, orgánico y resto.',
+                'Limpia los envases (vacía y enjuaga) para evitar contaminación.',
+                'Aplasta cajas y botellas para ahorrar espacio en los contenedores.',
+                'Deposita cada material en el contenedor correspondiente de tu municipio (p. ej. papel: azul, plásticos/envases: amarillo, vidrio: verde, orgánico: marrón, resto: gris).'
+            ],
+            tips: [
+                'Evita mezclar materiales; la mezcla contamina lotes de reciclaje.',
+                'No deposites residuos peligrosos (pilas, aceites) en los contenedores comunes — llévalos a puntos limpios.',
+                'Si un envase está muy grasiento (ej. caja de pizza), considera depositar la parte contaminada en orgánicos o rechazo según normativa local.',
+                'Reutiliza y reduce antes de reciclar: reutilizar una caja o botellas es mejor que reciclarlas.'
+            ]
+        };
+    } else {
+        wasteInfo = getWasteType(label);
+    }
 
     // Actualizar contenido
-    document.getElementById('info-title').textContent = wasteInfo.title;
-    document.getElementById('info-description').textContent = wasteInfo.description;
+    const titleEl = document.getElementById('info-title');
+    const descEl = document.getElementById('info-description');
+    if (titleEl) titleEl.textContent = wasteInfo.title;
+    if (descEl) descEl.textContent = wasteInfo.description;
 
     // Actualizar tipo con estilos
     const typeElement = document.getElementById('info-type');
-    typeElement.textContent = wasteInfo.type === 'reciclable' ? '♻️ Reciclable' :
-                             wasteInfo.type === 'organico' ? '🌱 Orgánico' : '❌ No Reciclable';
-    typeElement.className = `info-type-badge ${wasteInfo.type}`;
-
+    if (typeElement) {
+        if (wasteInfo.type === 'reciclable') {
+            typeElement.textContent = '♻️ Reciclable';
+        } else if (wasteInfo.type === 'organico') {
+            typeElement.textContent = '🌱 Orgánico';
+        } else if (wasteInfo.type === 'info') {
+            typeElement.textContent = 'ℹ️ Guía';
+        } else {
+            typeElement.textContent = '❌ No Reciclable';
+        }
+        typeElement.className = `info-type-badge ${wasteInfo.type}`;
+    }
 
     const instructionsContainer = document.getElementById('info-instructions');
     const tipsContainer = document.getElementById('info-tips');
@@ -1134,6 +1150,12 @@ function clearResults() {
     if (conf) conf.textContent = '';
     
     lastTopPrediction = null;
+    // Restaurar guía general en el menú de reciclaje
+    try {
+        updateRecyclingInfo(null);
+    } catch (e) {
+        console.warn('clearResults: no se pudo actualizar recycling info:', e);
+    }
     
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
