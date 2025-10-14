@@ -91,11 +91,11 @@
                         <div class="config-item">
                             <label>Modo Webcam:</label>
                             <div class="mode-options">
-                                <button id="continuous-mode-btn" class="mode-option"
+                                <button id="continuous-mode-btn" class="mode-option active"
                                     onclick="setWebcamMode('continuous')">
                                     Continua
                                 </button>
-                                <button id="capture-mode-btn" class="mode-option active"
+                                <button id="capture-mode-btn" class="mode-option"
                                     onclick="setWebcamMode('capture')">
                                     Captura
                                 </button>
@@ -103,7 +103,7 @@
                         </div>
                     </div>
 
-                    <div id="capture-controls" class="capture-controls">
+                    <div id="capture-controls" class="capture-controls" style="display: none;">
                         <button id="capture-btn" class="capture-btn" onclick="captureAndClassify()">
                             Capturar y Clasificar
                         </button>
