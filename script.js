@@ -1,4 +1,3 @@
-
 const MODEL_URL = './my_model/';
 let model, webcam, currentMode = 'webcam';
 let isWebcamActive = false; // indica si la webcam ya está inicializada y en play
@@ -9,7 +8,7 @@ let currentView = 'home';
 let isModalOpen = false;
 let lastTopPrediction = null;
 // Preferencia de cámara: 'environment' (trasera) o 'user' (frontal). Se puede cambiar desde la UI.
-let preferredFacing = 'environment';
+let preferredFacing = 'environment'; // Por defecto usar cámara trasera
 
 async function initApp() {
     console.log(' Iniciando Clasificador de Basura');
@@ -89,280 +88,163 @@ if (typeof currentMode !== 'undefined' && currentMode === 'webcam') {
         isModelLoaded = false;
     }
 }
-
 async function initWebcam() {
-    console.log('initWebcam: entrando');
-    // Debug rápido: imprimir estados
-    console.log('initWebcam -> isModelLoaded:', isModelLoaded, ' isWebcamActive:', isWebcamActive, ' currentMode:', currentMode);
+    console.log('🎥 Iniciando cámara...');
 
     if (!isModelLoaded) {
         updateStatus('Modelo de basura no cargado', 'error');
-        console.warn('initWebcam: modelo no cargado, abortando');
         return;
     }
 
-    // Si ya fue marcada activa, evitar reiniciar (pero hacemos una verificación extra).
     if (isWebcamActive && webcam && webcam.playing) {
-        console.log('initWebcam: webcam ya activa y en play, saliendo');
+        console.log('Cámara ya activa, saliendo');
         return;
     }
 
-    try {
-        updateStatus('🎥 Iniciando cámara...', 'loading');
+    const video = document.getElementById('webcam');
+    if (!video) return console.error("No se encontró el elemento <video>");
 
-        // Asegurar que el canvas existe en el DOM (evita race conditions)
-        const canvas = document.getElementById('webcam-canvas');
-        if (!canvas) {
-            // Esperar al próximo repaint y buscar de nuevo
-            console.warn('initWebcam: canvas no disponible, esperando repaint');
-            await new Promise(res => requestAnimationFrame(res));
-            await new Promise(res => setTimeout(res, 150));
-        }
+    // Detener streams previos
+    if (window.webcamStream) {
+        window.webcamStream.getTracks().forEach(track => track.stop());
+    }
 
-        // Forzar uso de cámara trasera por defecto (environment) a menos que el usuario haya elegido lo contrario.
-        // Esto aplica en móviles y escritorio: siempre intentamos seleccionar una cámara trasera primero.
+    // Detectar si es móvil o escritorio
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    console.log('Dispositivo detectado:', isMobile ? 'Móvil' : 'Escritorio');
 
-        // Construir constraints iniciales (pedimos resolución alta ideal)
-        let constraints = {
+    let stream = null;
+    let cameraUsed = '';
+
+    // ESTRATEGIA 1: En móviles, forzar cámara trasera con facingMode exact
+    if (isMobile) {
+        console.log('📱 Móvil detectado - Forzando cámara trasera con facingMode: environment');
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
             video: {
+                    facingMode: { exact: 'environment' },
                 width: { ideal: 1920 },
                 height: { ideal: 1080 }
             }
-        };
+            });
+            cameraUsed = 'Trasera (móvil)';
+            console.log('✅ Cámara trasera activada en móvil');
+        } catch (error) {
+            console.warn('❌ No se pudo usar facingMode environment en móvil:', error);
+        }
+    }
 
-        // Intentar obtener deviceId de una cámara trasera disponible (no limitar solo a móviles)
-        let selectedDeviceId = null;
-        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+    // ESTRATEGIA 2: Buscar cámara trasera por etiquetas (móvil y escritorio)
+    if (!stream) {
+        console.log('🔍 Buscando cámara trasera por etiquetas...');
             try {
                 const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoInputs = devices.filter(d => d.kind === 'videoinput');
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            
+            // Buscar cámara trasera por etiquetas
+            const backCamera = videoDevices.find(d => {
+                const label = d.label.toLowerCase();
+                return /back|rear|environment|main|primary|trasera|traser|rear camera|back camera/i.test(label);
+            });
 
-                // Buscar por etiquetas comunes de cámara trasera
-                const rearRegex = /back|rear|traser|trasera|environment|camara trasera|rear camera/i;
-                const found = videoInputs.find(d => d.label && rearRegex.test(d.label));
-                if (found) {
-                    selectedDeviceId = found.deviceId;
-                    console.log('initWebcam: cámara trasera detectada por label:', found.label);
-                } else {
-                    // Si no hay label (posiblemente sin permisos), solicitar temporalmente facingMode=environment
-                    try {
-                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: 640, height: 480 } });
-                        const track = tempStream.getVideoTracks()[0];
-                        const settings = track.getSettings && track.getSettings();
-                        if (settings && settings.deviceId) {
-                            selectedDeviceId = settings.deviceId;
-                            console.log('initWebcam: obtuvo deviceId tras permiso temporal:', selectedDeviceId);
-                        }
-                        // detener stream temporal
-                        track.stop();
-                    } catch (permErr) {
-                        console.warn('initWebcam: no se pudo obtener permiso temporal con facingMode=environment:', permErr);
+            if (backCamera) {
+                console.log('📷 Cámara trasera encontrada:', backCamera.label);
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        deviceId: { exact: backCamera.deviceId },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
                     }
-                }
-            } catch (enumErr) {
-                console.warn('initWebcam: enumerateDevices falló:', enumErr);
-            }
-        }
-
-        if (selectedDeviceId) {
-            constraints.video.deviceId = { exact: selectedDeviceId };
-        } else {
-            // Fallback: en móviles forzamos facingMode 'environment' para priorizar la trasera.
-            if (isMobile) {
-                constraints.video.facingMode = { exact: 'environment' };
-            } else {
-                // En escritorio, usar la preferencia si existe, sino preferir 'user'
-                const facingToUse = preferredFacing || 'user';
-                constraints.video.facingMode = { ideal: facingToUse };
-            }
-        }
-
-    // Crear webcam (tmImage.Webcam)
-    // No hacemos flip por defecto: preferimos mostrar la imagen tal cual (evita efecto espejo que puede confundirte)
-    const flip = false;
-    webcam = new tmImage.Webcam(640, 480, flip);
-
-        try {
-            // Intento normal con la API de la librería
-            console.log('initWebcam: intentando webcam.setup() con tmImage.Webcam');
-            await webcam.setup(constraints);
-            await webcam.play();
-            console.log('initWebcam: tmImage.Webcam.setup/play OK');
-        } catch (libError) {
-            // Fallback: intentar abrir la cámara directamente para diagnosticar permisos/constraints
-            console.warn('initWebcam: tmImage.Webcam.setup falló, intentando fallback getUserMedia', libError);
-            updateStatus('Intentando abrir cámara (fallback)...', 'loading');
-
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw libError; // rethrow si no hay fallback posible
-            }
-
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            // Si tmImage.Webcam tiene video interno, asignarle el stream manualmente
-            if (webcam && webcam.video) {
-                webcam.video.srcObject = stream;
-                await webcam.video.play();
-                // tmImage.Webcam internamente podría requerir `webcam.update()` later; seguiremos igualmente.
-            } else {
-                // Si no, creamos un elemento <video> temporal y lo ponemos en webcam.canvas (solo para diagnóstico)
-                const videoTemp = document.createElement('video');
-                videoTemp.autoplay = true;
-                videoTemp.playsInline = true;
-                videoTemp.srcObject = stream;
-                await new Promise(res => {
-                    videoTemp.onloadedmetadata = () => {
-                        videoTemp.play();
-                        res();
-                    };
                 });
-                // crear un objeto mínimo para usar sus canvas en predictWebcam
-                webcam = { canvas: document.createElement('canvas'), video: videoTemp, update: () => {}, playing: true };
-                webcam.canvas.width = videoTemp.videoWidth || 640;
-                webcam.canvas.height = videoTemp.videoHeight || 480;
+                cameraUsed = `Trasera (${backCamera.label})`;
+                console.log('✅ Cámara trasera activada por deviceId');
             }
+        } catch (error) {
+            console.warn('❌ Error buscando cámara trasera por etiquetas:', error);
         }
+    }
 
-        // Si llegamos aquí, consideramos la webcam en play
-        // Comprobar si realmente se abrió la cámara trasera; si no, intentar con otra cámara disponible.
-        let actuallyFront = false;
+    // ESTRATEGIA 3: Fallback - intentar facingMode environment ideal
+    if (!stream) {
+        console.log('🔄 Fallback: Intentando facingMode environment ideal...');
         try {
-            const activeStream = webcam && webcam.video && webcam.video.srcObject;
-            if (activeStream) {
-                const track = activeStream.getVideoTracks()[0];
-                const settings = track.getSettings && track.getSettings();
-                const label = track.label || '';
-                // Algunos navegadores devuelven facingMode en settings
-                if (settings && settings.facingMode) {
-                    actuallyFront = settings.facingMode === 'user' || settings.facingMode === 'front';
-                } else {
-                    // Fallback: inferir por label si contiene palabras comunes
-                    const frontRegex = /front|user|selfie|frontal/i;
-                    actuallyFront = frontRegex.test(label);
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { 
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 }
-                console.log('initWebcam: cámara activa label/settings:', label, settings, ' actuallyFront=', actuallyFront);
-            }
-        } catch (e) {
-            console.warn('initWebcam: no se pudo determinar facingMode del track:', e);
+            });
+            cameraUsed = 'Trasera (fallback)';
+            console.log('✅ Cámara trasera activada (fallback)');
+        } catch (error) {
+            console.warn('❌ Fallback environment falló:', error);
         }
+    }
 
-        // Si detectamos que por alguna razón se abrió la frontal, intentamos seleccionar otra cámara (trasera) si existe
-        if (actuallyFront && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoInputs = devices.filter(d => d.kind === 'videoinput');
-                const frontRegex = /front|user|selfie|frontal/i;
-                const rearCandidate = videoInputs.find(d => d.label && !frontRegex.test(d.label));
-                if (rearCandidate) {
-                    console.log('initWebcam: se detectó frontal. Reintentando con candidate trasera:', rearCandidate.label || rearCandidate.deviceId);
-                    // Detener stream actual
-                    try {
-                        if (webcam && typeof webcam.stop === 'function') webcam.stop();
-                        if (webcam && webcam.video && webcam.video.srcObject) {
-                            const tracks = webcam.video.srcObject.getTracks();
-                            tracks.forEach(t => t.stop());
-                        }
-                    } catch (stopErr) {
-                        console.warn('initWebcam: error deteniendo stream antes de reintentar:', stopErr);
-                    }
-
-                    // Forzar deviceId al candidate trasera y reiniciar webcam una única vez
-                    constraints.video.deviceId = { exact: rearCandidate.deviceId };
-                    // Ajustar flip acorde (trasera no debe flipearse)
-                    const flipRetry = false; // trasera -> no flip
-                    webcam = new tmImage.Webcam(640, 480, flipRetry);
-                    await webcam.setup(constraints);
-                    await webcam.play();
-                    // actualizar canvas/video
-                    const finalCanvasRetry = document.getElementById('webcam-canvas');
-                    if (finalCanvasRetry && webcam && webcam.video) {
-                        const vw = webcam.video.videoWidth || webcam.canvas && webcam.canvas.width || 640;
-                        const vh = webcam.video.videoHeight || webcam.canvas && webcam.canvas.height || 480;
-                        finalCanvasRetry.width = vw;
-                        finalCanvasRetry.height = vh;
-                        finalCanvasRetry.style.display = 'block';
-                        if (webcam.canvas) {
-                            webcam.canvas.width = vw;
-                            webcam.canvas.height = vh;
-                        }
-                    }
-                    console.log('initWebcam: reintento con cámara trasera realizado');
-                } else {
-                    console.log('initWebcam: no se encontró una cámara trasera alternativa para reintentar');
+    // ESTRATEGIA 4: Último recurso - cámara frontal (solo en escritorio)
+    if (!stream && !isMobile) {
+        console.log('🔄 Último recurso: Usando cámara frontal en escritorio...');
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 }
-            } catch (retryErr) {
-                console.warn('initWebcam: error al enumerar/reintentar con cámara trasera:', retryErr);
-            }
+            });
+            cameraUsed = 'Frontal (último recurso)';
+            console.log('✅ Cámara frontal activada como último recurso');
+        } catch (error) {
+            console.error('❌ No se pudo acceder a ninguna cámara:', error);
+            alert("No se pudo acceder a la cámara. Revisa los permisos.");
+            return;
         }
+    }
 
-        isWebcamActive = true;
-        console.log('initWebcam: isWebcamActive = true');
+    // Si no se pudo obtener ninguna cámara
+    if (!stream) {
+        console.error('❌ No se pudo acceder a ninguna cámara');
+        alert("No se pudo acceder a la cámara. Revisa los permisos.");
+        return;
+    }
 
-        // Mostrar canvas (de nuevo por si estuvo ausente)
-        const finalCanvas = document.getElementById('webcam-canvas');
-            if (finalCanvas && webcam && webcam.video) {
-                // Ajustar el canvas al tamaño real del stream para mantener resolución máxima
-                const vw = webcam.video.videoWidth || webcam.canvas && webcam.canvas.width || 640;
-                const vh = webcam.video.videoHeight || webcam.canvas && webcam.canvas.height || 480;
-                finalCanvas.width = vw;
-                finalCanvas.height = vh;
-                finalCanvas.style.display = 'block';
-                // Si la librería creó su propio canvas más pequeño, mantenerlo consistente
-                if (webcam.canvas) {
-                    webcam.canvas.width = vw;
-                    webcam.canvas.height = vh;
-                }
-            } else if (finalCanvas && webcam && webcam.canvas) {
-                finalCanvas.width = webcam.canvas.width || 640;
-                finalCanvas.height = webcam.canvas.height || 480;
-                finalCanvas.style.display = 'block';
-            } else {
-                console.warn('initWebcam: canvas final no encontrado o webcam.canvas ausente');
-            }
+    // Configurar el video
+    window.webcamStream = stream;
+    video.srcObject = stream;
+    video.style.transform = "none"; // Sin espejo para cámara trasera
 
-        let statusMessage = ' Cámara activa';
+    await new Promise(resolve => {
+        video.onloadedmetadata = () => {
+            video.play();
+            resolve();
+        };
+    });
+
+    // Crear webcam para tmImage
+    const flip = false; // No flip para cámara trasera
+    webcam = new tmImage.Webcam(640, 480, flip);
+    
+    // Configurar canvas
+    const canvas = document.getElementById('webcam-canvas');
+    if (canvas) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.style.display = 'block';
+    }
+
+    isWebcamActive = true;
+    
+    let statusMessage = `📷 ${cameraUsed} activa`;
         if (webcamMode === 'continuous') {
-            statusMessage += ' - Muestra un objeto para clasificar \n Asegurate de que el fondo sea claro';
+        statusMessage += ' - Muestra un objeto para clasificar';
         } else {
-            statusMessage += ' - Presiona "Capturar" para analizar \n Asegurate de que el fondo sea claro';
+        statusMessage += ' - Presiona "Capturar" para analizar';
         }
         updateStatus(statusMessage, 'success');
 
-        // iniciar loop de predicción (no bloqueante)
-        try {
+    // Iniciar predicción
             predictWebcam();
-        } catch (e) {
-            console.warn('initWebcam: predictWebcam lanzó excepción (no crítico)', e);
-        }
-
-    } catch (error) {
-        console.error(' Error con webcam (detalle):', error);
-        let errorMsg = ' Error de cámara: ';
-        if (error && error.name) {
-            if (error.name === 'NotAllowedError') {
-                errorMsg += 'Permisos denegados. Permite el acceso a la cámara.';
-            } else if (error.name === 'NotFoundError') {
-                errorMsg += 'No se encontró cámara conectada.';
-            } else if (error.name === 'NotReadableError') {
-                errorMsg += 'Cámara en uso por otra aplicación.';
-            } else {
-                errorMsg += error.message || String(error);
-            }
-        } else {
-            errorMsg += String(error);
-        }
-        updateStatus(errorMsg, 'error');
-
-        // Para depuración adicional, muestra en consola la lista de dispositivos disponibles
-        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                console.log('Dispositivos multimedia detectados:', devices);
-            } catch (devErr) {
-                console.warn('No se pudo enumerar dispositivos:', devErr);
-            }
-        }
-    }
 }
 
 // Permite al usuario cambiar entre cámara frontal y trasera
@@ -398,46 +280,29 @@ function setCameraFacing(facing) {
 }
 
 async function predictWebcam() {
-    if (!webcam || currentMode !== 'webcam') return;
+    if (webcam && currentMode === 'webcam') {
+        // Actualizar webcam
+        webcam.update();
 
-    // Actualizar webcam si la función existe
-    if (webcam.update) webcam.update();
-
-    // Obtener canvas y contexto
+        // Copiar frame al canvas visible
     const canvas = document.getElementById('webcam-canvas');
     const ctx = canvas.getContext('2d');
+        ctx.drawImage(webcam.canvas, 0, 0);
 
-    // Elegir fuente: video si existe, sino canvas interno
-    const source = webcam.video || webcam.canvas;
-    if (!source) {
-        console.warn('predictWebcam: no hay fuente de video/canvas disponible aún');
-        requestAnimationFrame(predictWebcam);
-        return;
-    }
-
-    // Ajustar tamaño del canvas al del video
-    canvas.width = source.videoWidth || source.width || 640;
-    canvas.height = source.videoHeight || source.height || 480;
-
-    // Dibujar el frame en el canvas visible
-    ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
-
-    // Guardar imagen y predecir
-    if (webcamMode === 'continuous' && isModelLoaded) {
+        if (webcamMode === 'continuous') {
+            // Modo individual: sistema simplificado
+            // Guardar imagen completa para feedback
         currentImageData = canvas.toDataURL('image/jpeg', 0.8);
 
-        try {
+            // Hacer predicción en toda la imagen
             const predictions = await model.predict(canvas);
             displayPrediction(predictions);
-        } catch (err) {
-            console.warn('predictWebcam: error en predict:', err);
-        }
     }
 
     // Continuar el loop
     requestAnimationFrame(predictWebcam);
+    }
 }
-
 
 function setupEventListeners() {
 
@@ -470,14 +335,15 @@ function setupEventListeners() {
         }
     });
 
+    // Event listener para canvas eliminado - no necesario en modo individual
 
+    // Cerrar menú al hacer clic fuera
     document.addEventListener('click', (e) => {
         const menu = document.getElementById('dropdown-menu');
-        if (menu && !menu.contains(e.target)) {
+        if (!menu.contains(e.target)) {
             menu.classList.remove('show');
         }
     });
-    
 }
 
 function switchMode(mode) {
@@ -637,9 +503,11 @@ function renderTopPrediction(topPrediction) {
 
     const wasteInfo = getWasteType(topPrediction.className);
     const typeLabel = wasteInfo.type === 'reciclable' ? '♻️ Reciclable' :
-                     wasteInfo.type === 'organico' ? '📦 Merma' : '❌ No Reciclable';
+                     wasteInfo.type === 'organico' ? '🌱 Orgánico' :
+                     wasteInfo.type === 'merma' ? '🗑️ Merma' : '❌ No Reciclable';
     const typeClass = wasteInfo.type === 'reciclable' ? 'reciclable' :
-                     wasteInfo.type === 'organico' ? 'merma' : 'no-reciclable';
+                     wasteInfo.type === 'organico' ? 'organico' :
+                     wasteInfo.type === 'merma' ? 'merma' : 'no-reciclable';
 
     const predictionDiv = document.getElementById('prediction');
     predictionDiv.innerHTML = '';
@@ -655,9 +523,11 @@ function renderTopPrediction(topPrediction) {
     // Mostrar resultado solo si la confianza alcanza el umbral
     const confidenceNum = parseFloat(confidence);
     if (!isNaN(confidenceNum) && confidenceNum >= 90) {
-        // Confianza suficiente: mostrar etiqueta y tipo
+        // Confianza suficiente: mostrar etiqueta, tipo y botón de información
         predictionDiv.appendChild(resultEl);
         predictionDiv.appendChild(typeEl);
+
+        // Botón de información eliminado - solo usar menú desplegable
 
         // Actualizar el contenido del menú desplegable automáticamente (solo con confianza alta)
         updateRecyclingInfo(topPrediction.className);
@@ -694,6 +564,7 @@ function formatLabel(className) {
     if (label.includes('limon') || label.includes('limón')) return 'Limón';
     if (label.includes('huevo')) return 'Huevo (cáscara)';
     if (label.includes('piña') || label.includes('pina')) return 'Piña';
+    if (label.includes('merma') || label.includes('basura')) return 'Merma / Basura';
 
     // Fallback: retornar como vino
     return `${className}`;
@@ -907,97 +778,97 @@ const recyclingInfo = {
     'organico': {
         type: 'organico',
         title: 'Residuo Orgánico',
-        description: 'Los residuos orgánicos son materiales biodegradables que provienen de seres vivos o alimentos.',
+        description: 'Los residuos orgánicos son ideales para compostaje/abono. Transfórmalos en nutrientes para tus plantas o entrégalos al sistema de orgánicos.',
         instructions: [
-            'Deposítalo en el contenedor marrón específico para orgánicos',
-            'No incluyas plásticos, metales o vidrios',
-            'Si tienes compostaje doméstico, úsalo para generar abono',
-            'Evita bolsas de plástico, usa bolsas compostables'
+            'Prioriza el compostaje doméstico: deposítalo en tu compostera para generar abono',
+            'Si no tienes compostera, usa el contenedor marrón de orgánicos de tu municipio',
+            'Corta los restos en trozos pequeños para acelerar el proceso',
+            'No mezcles plásticos, metales o vidrio; usa bolsas compostables si necesitas bolsa'
         ],
         tips: [
-            'Los residuos orgánicos se convierten en compost rico en nutrientes',
-            'El compostaje reduce la cantidad de basura que va a los vertederos',
-            'Incluye cáscaras de frutas, verduras, restos de comida, café, té, etc.'
+            'Mantén un buen balance: 2 partes de material seco (hojas/cartón) por 1 de restos de cocina',
+            'Evita grandes cantidades de carnes y lácteos en compost doméstico',
+            'Frutas, verduras, posos de café, té y cáscaras son excelentes para hacer abono'
         ]
     },
     'manzana': {
         type: 'organico',
         title: 'Manzana',
-        description: 'Las manzanas y otras frutas son residuos orgánicos biodegradables.',
+        description: 'Las manzanas son perfectas para hacer compost/abono y aportar nutrientes al suelo.',
         instructions: [
-            'Deposítala en el contenedor marrón de orgánicos',
-            'Si tienes espacio, puedes hacer compostaje doméstico',
-            'No uses bolsas de plástico, usa bolsas compostables o papel',
-            'Incluye el corazón y las semillas'
+            'Depósitala en tu compostera; si no tienes, usa el contenedor marrón de orgánicos',
+            'Córtala en trozos para acelerar el compostaje',
+            'Evita bolsas plásticas; si necesitas, usa compostables o papel',
+            'Incluye corazón y semillas sin problema'
         ],
         tips: [
-            'Las frutas son excelentes para el compostaje',
-            'Una manzana se descompone completamente en 2-4 semanas',
-            'El compost de frutas es rico en nutrientes naturales'
+            'Se descompone en 2-4 semanas en condiciones óptimas',
+            'Aporta azúcares que activan microorganismos beneficiosos',
+            'Mezcla con material seco (hojas/cartón) para evitar exceso de humedad'
         ]
     },
     'banano': {
         type: 'organico',
         title: 'Banana/Plátano',
-        description: 'Las bananas y sus cáscaras son residuos orgánicos altamente biodegradables.',
+        description: 'Las bananas y sus cáscaras son excelentes para compost/abono por su riqueza en potasio.',
         instructions: [
-            'Deposita la cáscara en el contenedor marrón',
-            'Si tienes compost, agrégala directamente',
-            'No uses bolsas plásticas, usa compostables',
-            'Incluye toda la fruta si está en mal estado'
+            'Añade cáscaras y restos a tu compostera; como alternativa, usa el contenedor marrón',
+            'Trocea cáscaras para acelerar su descomposición',
+            'Evita bolsas plásticas; prefiere compostables',
+            'Incluye la fruta si está pasada o en mal estado'
         ],
         tips: [
-            'Las cáscaras de banana son ricas en potasio para el compost',
-            'Se descomponen rápidamente (1-2 semanas)',
-            'Excelente para abono natural de plantas'
+            'Ricas en potasio: benefician el desarrollo de flores y frutos',
+            'Se descomponen rápido (1-2 semanas en trozos pequeños)',
+            'Enterrándolas cerca de plantas aportan nutrientes de forma gradual'
         ]
     },
     'limon': {
         type: 'organico',
         title: 'Limón',
-        description: 'Los limones y cítricos son residuos orgánicos ácidos pero biodegradables.',
+        description: 'Los limones y cítricos pueden compostarse; úsalos con moderación para evitar acidificar en exceso.',
         instructions: [
-            'Deposítalo en el contenedor marrón de orgánicos',
-            'Incluye cáscaras y pulpa',
-            'Evita bolsas de plástico',
-            'Perfecto para compostaje doméstico'
+            'Añade cáscaras y pulpa en pequeñas cantidades a la compostera',
+            'Si no compostas, deposítalo en el contenedor marrón de orgánicos',
+            'Evita bolsas plásticas; usa compostables',
+            'Trocea para acelerar la descomposición'
         ],
         tips: [
-            'Los cítricos ayudan a equilibrar el pH del compost',
-            'Se descomponen en 2-3 semanas',
-            'Ricos en vitamina C que beneficia al compost'
+            'Úsalos mezclados con material marrón para equilibrar humedad y acidez',
+            'Se descomponen en 2-3 semanas en trozos pequeños',
+            'Las cáscaras aportan aceites naturales; no excederse para no frenar microorganismos'
         ]
     },
     'huevo': {
         type: 'organico',
         title: 'Huevo',
-        description: 'Las cáscaras de huevo son residuos orgánicos ricos en calcio.',
+        description: 'Las cáscaras de huevo trituradas son excelentes para compost/abono por su aporte de calcio.',
         instructions: [
-            'Deposita las cáscaras en el contenedor marrón',
-            'Aplástalas para que ocupen menos espacio',
-            'Incluye yemas y claras si están crudas',
-            'Perfecto para compostaje'
+            'Seca y tritura las cáscaras antes de añadirlas a la compostera',
+            'Si no compostas, úsalas en el contenedor marrón',
+            'Evita añadir grandes cantidades de restos cocidos grasos',
+            'Mezcla con material seco para equilibrar'
         ],
         tips: [
-            'Las cáscaras de huevo agregan calcio al compost',
-            'Se descomponen en 3-4 semanas',
-            'Ayudan a reducir la acidez del compost'
+            'Aportan calcio que ayuda a reducir la acidez del compost',
+            'Cuanto más trituradas, más rápido se integran',
+            'Útiles para suelos y plantas que requieren calcio'
         ]
     },
     'piña': {
         type: 'organico',
         title: 'Piña',
-        description: 'La piña y sus residuos son orgánicos biodegradables.',
+        description: 'La piña y sus residuos (cáscara, corazón, hojas) son aptos para compost/abono.',
         instructions: [
-            'Deposita en contenedor marrón de orgánicos',
-            'Incluye cáscaras, corazón y hojas',
-            'Córtala en trozos pequeños para mejor compostaje',
-            'Evita bolsas de plástico'
+            'Añade cáscara, corazón y hojas a tu compostera; trocea para acelerar',
+            'Si no compostas, deposítalos en el contenedor marrón de orgánicos',
+            'Mezcla con material seco para evitar exceso de humedad',
+            'Evita bolsas plásticas; prefiere compostables'
         ],
         tips: [
-            'La piña es rica en enzimas naturales',
-            'Se descompone en 3-4 semanas',
-            'Excelente para compostaje doméstico'
+            'Contiene enzimas que ayudan a la descomposición',
+            'Se descompone en 3-4 semanas en condiciones favorables',
+            'Aporta humedad; equilibra con hojas secas o cartón'
         ]
     },
     'shakalaka': {
@@ -1030,6 +901,25 @@ const recyclingInfo = {
         'El papel debe estar seco y limpio para ser reciclable',
         'Reutiliza cajas cuando sea posible antes de reciclarlas',
         'Evita mezclar papel con residuos orgánicos o plásticos'
+    ]
+},
+    'merma': {
+        type: 'merma',
+        title: 'Merma / Basura',
+        description: 'Objetos que han llegado al final de su vida útil y no pueden ser reciclados, reutilizados o compostados. Son residuos que deben ir al contenedor de rechazo.',
+        instructions: [
+            'Deposítalo en el contenedor gris de rechazo',
+            'Asegúrate de que no contenga materiales peligrosos',
+            'Si es un objeto grande, consulta con el servicio de recolección especial',
+            'No lo quemes ni lo tires en la naturaleza',
+            'Si contiene datos personales (documentos, discos), destrúyelos antes de desechar'
+        ],
+        tips: [
+            'Antes de desechar, considera si realmente no se puede reparar o reutilizar',
+            'Los objetos de merma van a vertederos controlados donde se manejan de forma segura',
+            'Evita generar merma innecesaria: compra solo lo que necesites',
+            'Si el objeto es muy grande, llévalo a un punto limpio o solicita recogida especial',
+            'Los residuos peligrosos (pilas, medicamentos, aceites) van a puntos limpios, no al contenedor gris'
     ]
 }
 };
@@ -1070,6 +960,7 @@ function toggleRecyclingInfo() {
         toggleBtn.classList.remove('active');
     } else {
 
+        // Si hay una última predicción válida, mostrar su información; si no, mostrar guía general de reciclaje
         const labelToShow = lastTopPrediction && lastTopPrediction.className ? lastTopPrediction.className : null;
         updateRecyclingInfo(labelToShow);
         recyclingContent.classList.add('show');
@@ -1085,8 +976,8 @@ function updateRecyclingInfo(label) {
         // Contenido por defecto cuando no hay predicción: guía básica de reciclaje
         wasteInfo = {
             type: 'info',
-            title: 'Esperando clasificación',
-            description: 'Coloca el objeto frente a la cámara o sube una imagen para obtener instrucciones específicas de reciclaje. Mientras esperas, aquí tienes una guía práctica de reciclaje universal:',
+            title: 'Información de Reciclaje',
+            description: 'Coloca el objeto frente a la cámara o sube una imagen para obtener instrucciones específicas de reciclaje. Mientras esperas, aquí tienes información práctica de reciclaje universal:',
             instructions: [
                 'Separa los residuos por tipo: papel/cartón, plástico, vidrio, metal, orgánico y resto.',
                 'Limpia los envases (vacía y enjuaga) para evitar contaminación.',
@@ -1117,8 +1008,10 @@ function updateRecyclingInfo(label) {
             typeElement.textContent = '♻️ Reciclable';
         } else if (wasteInfo.type === 'organico') {
             typeElement.textContent = '🌱 Orgánico';
+        } else if (wasteInfo.type === 'merma') {
+            typeElement.textContent = '🗑️ Merma';
         } else if (wasteInfo.type === 'info') {
-            typeElement.textContent = '';
+            typeElement.textContent = 'ℹ️ Información';
         } else {
             typeElement.textContent = '❌ No Reciclable';
         }
