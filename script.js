@@ -89,6 +89,18 @@ if (typeof currentMode !== 'undefined' && currentMode === 'webcam') {
     }
 }
 async function initWebcam() {
+    console.log('🎥 Iniciando cámara...');
+    
+    if (!isModelLoaded) {
+        updateStatus('Modelo de basura no cargado', 'error');
+        return;
+    }
+
+    if (isWebcamActive && webcam && webcam.playing) {
+        console.log('Cámara ya activa, saliendo');
+        return;
+    }
+
     const video = document.getElementById('webcam');
     if (!video) return console.error("No se encontró el elemento <video>");
 
@@ -97,43 +109,142 @@ async function initWebcam() {
         window.webcamStream.getTracks().forEach(track => track.stop());
     }
 
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(d => d.kind === 'videoinput');
+    // Detectar si es móvil o escritorio
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    console.log('Dispositivo detectado:', isMobile ? 'Móvil' : 'Escritorio');
 
-    // Buscar una cámara trasera por nombre (expanded regex para mejor detección)
-    let backCamera = videoDevices.find(d =>
-        /back|rear|environment|main|primary|trasera|traser/i.test(d.label)
-    );
+    let stream = null;
+    let cameraUsed = '';
 
-    // Si no hay etiqueta (antes de permisos), intentar environment
-    let constraints = backCamera
-        ? { video: { deviceId: { exact: backCamera.deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } } }
-        : { video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } } };
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        window.webcamStream = stream;
-        video.srcObject = stream;
-        video.style.transform = "none"; // sin espejo
-
-        await new Promise(r => video.onloadedmetadata = r);
-        video.play();
-        console.log(`✅ Cámara usada: ${backCamera ? backCamera.label : "predeterminada (environment)"}`);
-    } catch (err) {
-        console.warn("No se pudo usar la cámara trasera, usando la frontal…", err);
+    // ESTRATEGIA 1: En móviles, forzar cámara trasera con facingMode exact
+    if (isMobile) {
+        console.log('📱 Móvil detectado - Forzando cámara trasera con facingMode: environment');
         try {
-            const fallback = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            window.webcamStream = fallback;
-            video.srcObject = fallback;
-            video.style.transform = "none";
-            await new Promise(r => video.onloadedmetadata = r);
-            video.play();
-            console.log("✅ Cámara frontal activada como respaldo");
-        } catch (e2) {
-            console.error("❌ No se pudo acceder a ninguna cámara:", e2);
-            alert("No se pudo acceder a la cámara. Revisa los permisos.");
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { 
+                    facingMode: { exact: 'environment' },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
+            });
+            cameraUsed = 'Trasera (móvil)';
+            console.log('✅ Cámara trasera activada en móvil');
+        } catch (error) {
+            console.warn('❌ No se pudo usar facingMode environment en móvil:', error);
         }
     }
+
+    // ESTRATEGIA 2: Buscar cámara trasera por etiquetas (móvil y escritorio)
+    if (!stream) {
+        console.log('🔍 Buscando cámara trasera por etiquetas...');
+        try {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const videoDevices = devices.filter(d => d.kind === 'videoinput');
+            
+            // Buscar cámara trasera por etiquetas
+            const backCamera = videoDevices.find(d => {
+                const label = d.label.toLowerCase();
+                return /back|rear|environment|main|primary|trasera|traser|rear camera|back camera/i.test(label);
+            });
+
+            if (backCamera) {
+                console.log('📷 Cámara trasera encontrada:', backCamera.label);
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        deviceId: { exact: backCamera.deviceId },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                });
+                cameraUsed = `Trasera (${backCamera.label})`;
+                console.log('✅ Cámara trasera activada por deviceId');
+            }
+        } catch (error) {
+            console.warn('❌ Error buscando cámara trasera por etiquetas:', error);
+        }
+    }
+
+    // ESTRATEGIA 3: Fallback - intentar facingMode environment ideal
+    if (!stream) {
+        console.log('🔄 Fallback: Intentando facingMode environment ideal...');
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { 
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
+            });
+            cameraUsed = 'Trasera (fallback)';
+            console.log('✅ Cámara trasera activada (fallback)');
+        } catch (error) {
+            console.warn('❌ Fallback environment falló:', error);
+        }
+    }
+
+    // ESTRATEGIA 4: Último recurso - cámara frontal (solo en escritorio)
+    if (!stream && !isMobile) {
+        console.log('🔄 Último recurso: Usando cámara frontal en escritorio...');
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
+            });
+            cameraUsed = 'Frontal (último recurso)';
+            console.log('✅ Cámara frontal activada como último recurso');
+        } catch (error) {
+            console.error('❌ No se pudo acceder a ninguna cámara:', error);
+            alert("No se pudo acceder a la cámara. Revisa los permisos.");
+            return;
+        }
+    }
+
+    // Si no se pudo obtener ninguna cámara
+    if (!stream) {
+        console.error('❌ No se pudo acceder a ninguna cámara');
+        alert("No se pudo acceder a la cámara. Revisa los permisos.");
+        return;
+    }
+
+    // Configurar el video
+    window.webcamStream = stream;
+    video.srcObject = stream;
+    video.style.transform = "none"; // Sin espejo para cámara trasera
+
+    await new Promise(resolve => {
+        video.onloadedmetadata = () => {
+            video.play();
+            resolve();
+        };
+    });
+
+    // Crear webcam para tmImage
+    const flip = false; // No flip para cámara trasera
+    webcam = new tmImage.Webcam(640, 480, flip);
+    
+    // Configurar canvas
+    const canvas = document.getElementById('webcam-canvas');
+    if (canvas) {
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        canvas.style.display = 'block';
+    }
+
+    isWebcamActive = true;
+    
+    let statusMessage = `📷 ${cameraUsed} activa`;
+    if (webcamMode === 'continuous') {
+        statusMessage += ' - Muestra un objeto para clasificar';
+    } else {
+        statusMessage += ' - Presiona "Capturar" para analizar';
+    }
+    updateStatus(statusMessage, 'success');
+
+    // Iniciar predicción
+    predictWebcam();
 }
 
 // Permite al usuario cambiar entre cámara frontal y trasera
