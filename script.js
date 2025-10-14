@@ -852,9 +852,40 @@ const recyclingInfo = {
             'Si el objeto es muy grande, llévalo a un punto limpio o solicita recogida especial',
             'Los residuos peligrosos (pilas, medicamentos, aceites) van a puntos limpios, no al contenedor gris'
         ]
+    },
+    "tomate": {
+        type: 'organico',
+        title: 'Tomate',
+        description: 'Los tomates son ideales para compostaje/abono, aportando nutrientes esenciales al suelo.',
+        instructions: [
+            'Depósitalo en tu compostera; si no tienes, usa el contenedor marrón de orgánicos',
+            'Córtalo en trozos para acelerar el compostaje',
+            'Evita bolsas plásticas; si necesitas, usa compostables o papel',
+            'Incluye tanto la fruta como el tallo si está en buen estado'
+        ],
+        tips: [
+            'Se descompone en 2-4 semanas en condiciones óptimas',
+            'Aporta vitaminas y minerales que benefician el suelo',
+            'Mezcla con material seco (hojas/cartón) para evitar exceso de humedad'
+        ]
+    },
+    "papaya": {
+        type: 'organico',
+        title: 'Papaya',
+        description: 'Las papayas son excelentes para compost/abono debido a su alto contenido de agua y nutrientes.',
+        instructions: [
+            'Añade restos y cáscaras a tu compostera; como alternativa, usa el contenedor marrón',
+            'Trocea para acelerar la descomposición',
+            'Evita bolsas plásticas; prefiere compostables',
+            'Incluye la fruta si está pasada o en mal estado'
+        ],
+        tips: [
+            'Se descompone rápidamente (1-2 semanas en trozos pequeños)',
+            'Aporta humedad y nutrientes beneficiosos para el compost',
+            'Mezcla con material seco para equilibrar la humedad'
+        ]
     }
 };
-
 function getWasteType(label) {
     const normalizedLabel = label.toLowerCase().trim();
 
