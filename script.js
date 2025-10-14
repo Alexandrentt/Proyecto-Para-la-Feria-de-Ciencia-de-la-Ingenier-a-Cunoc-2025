@@ -909,6 +909,14 @@ const recyclingInfo = {
             'Ideal combinar con cartón seco para equilibrar la mezcla'
         ]
     },
+    "dulces" : {
+        type: 'merma',
+        title: 'Dulces / Caramelos',
+        description: 'La envoltura del dulce no es reciclable debido a su empaque. Está hecho de multiples capas de material: Plastico, alumminio y papel, que no se pueden separar en plantas de reciclaje.',
+        instructions: 'Deposítalos en el contenedor gris o negro de rechazo',
+
+
+    },
     "no hay nada" : {
         type: 'info',
         title: 'Información de Reciclaje',
