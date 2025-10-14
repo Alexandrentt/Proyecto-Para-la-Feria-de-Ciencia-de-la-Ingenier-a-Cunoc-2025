@@ -156,7 +156,7 @@ Si deseas entrenar tu propio modelo:
    const MODEL_URL = './my_model/';
    ```
 
-## 🌐 Compatibilidad de Navegadores
+##  Compatibilidad de Navegadores
 
 | Navegador | Versión Mínima | Soporte |
 |-----------|----------------|---------|
@@ -199,7 +199,7 @@ Para cada objeto detectado, el sistema proporciona:
 - **Móvil**: Interfaz optimizada con elementos apilados
 - **Tablet**: Diseño adaptativo intermedio
 
-## 👥 Créditos
+##  Créditos
 
 **SARB - Sistema Automático de Reconocimiento de Basura**
 
@@ -209,8 +209,8 @@ Para cada objeto detectado, el sistema proporciona:
 
 ### Agradecimientos
 
-- Facultad de Ingeniería del Centro Universitaicion de Occidente
-- Zi, si estás leyendo esto.
+- Facultad de Ingeniería del Centro Universitaicion de Occidente por que la feria es cosa del aniversario de Ingeniería.
+- Zi, si estás leyendo esto. Por, no se. Apoyo moral?
 
 ##  Licencia
 
@@ -243,7 +243,7 @@ SOFTWARE.
 
 <div align="center">
 
-** Construyendo un futuro más verde, una clasificación a la vez **
+Construyendo un futuro más verde, una clasificación a la vez (Ah re xd) 
 
 [![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red.svg)](https://github.com/sarb-proyecto)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)](https://www.javascript.com/)
