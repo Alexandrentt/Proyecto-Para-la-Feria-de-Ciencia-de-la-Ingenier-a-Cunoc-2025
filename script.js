@@ -7,14 +7,12 @@ let webcamMode = 'capture';
 let currentView = 'home'; 
 let isModalOpen = false;
 let lastTopPrediction = null;
-// usamos la camara trasera, primer intento
 let preferredFacing = 'environment';
 
 async function initApp() {
     console.log(' Iniciando Clasificador de Basura');
     updateStatus('Verificando librerías...', 'loading');
 
-    // esto verifica las librerias
     if (typeof tf === 'undefined') {
         updateStatus(' TensorFlow.js no cargado', 'error');
         return;
@@ -27,7 +25,6 @@ async function initApp() {
 
     console.log('Librerías cargadas correctamente');
 
-    // Carga el modelo
     await loadModel();
 
     setupEventListeners();
@@ -106,14 +103,12 @@ async function initWebcam() {
         window.webcamStream.getTracks().forEach(track => track.stop());
     }
 
-    // Detectar si es telefono o computadora
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     console.log('Dispositivo detectado:', isMobile ? 'Móvil' : 'Escritorio');
 
     let stream = null;
     let cameraUsed = '';
 
-    // ESTRATEGIA 1: En telefonos, forzar la cámara trasera con facingMode exact
     if (isMobile) {
         console.log(' Móvil detectado - Forzando cámara trasera con facingMode: environment');
         try {
@@ -131,14 +126,12 @@ async function initWebcam() {
         }
     }
 
-    // ESTRATEGIA 2: Buscar cámara trasera por etiquetas (telefono y computadora)
     if (!stream) {
         console.log('🔍 Buscando cámara trasera por etiquetas...');
             try {
                 const devices = await navigator.mediaDevices.enumerateDevices();
             const videoDevices = devices.filter(d => d.kind === 'videoinput');
 
-            // Buscar cámara trasera por etiquetas
             const backCamera = videoDevices.find(d => {
                 const label = d.label.toLowerCase();
                 return /back|rear|environment|main|primary|trasera|traser|rear camera|back camera/i.test(label);
@@ -161,7 +154,6 @@ async function initWebcam() {
         }
     }
 
-    // ESTRATEGIA 3: 
     if (!stream) {
         console.log('🔄 Fallback: Intentando facingMode environment ideal...');
         try {
@@ -179,7 +171,6 @@ async function initWebcam() {
         }
     }
 
-    // ESTRATEGIA 4: Último recurso, la cámara frontal (solo en computadora)
     if (!stream && !isMobile) {
         console.log('🔄 Último recurso: Usando cámara frontal en escritorio...');
         try {
@@ -199,14 +190,12 @@ async function initWebcam() {
         }
     }
 
-    // Si no se pudo obtener ninguna cámara
     if (!stream) {
         console.error('No se pudo acceder a ninguna cámara');
         alert("No se pudo acceder a la cámara. Revisa los permisos.");
         return;
     }
 
-    // Configurar el video
     window.webcamStream = stream;
     video.srcObject = stream;
     video.style.transform = "none"; 
@@ -217,7 +206,6 @@ async function initWebcam() {
         };
     });
 
-    // Crear webcam para tmImage
     const flip = false;
     webcam = new tmImage.Webcam(640, 480, flip);
 
@@ -277,7 +265,6 @@ async function predictWebcam() {
 
 function setupEventListeners() {
 
-    // Drag & Drop para imágenes
     const uploadArea = document.querySelector('.upload-area');
 
     uploadArea.addEventListener('dragover', (e) => {
@@ -299,16 +286,12 @@ function setupEventListeners() {
         }
     });
 
-    // Input de archivo
     document.getElementById('file-input').addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             handleImageFile(e.target.files[0]);
         }
     });
 
-    // Event listener para canvas eliminado - no necesario en modo individual
-
-    // Cerrar menú de información al hacer clic fuera
     document.addEventListener('click', (e) => {
         const content = document.getElementById('recycling-content');
         const toggleBtn = document.querySelector('.info-toggle-btn');
@@ -325,22 +308,18 @@ function setupEventListeners() {
 function switchMode(mode) {
     currentMode = mode;
     
-    // Limpiar resultados al cambiar de modo
     clearResults();
     
-    // Ocultar menú desplegable de información si está abierto
     const recyclingContent = document.getElementById('recycling-content');
     const toggleBtn = document.querySelector('.info-toggle-btn');
     if (recyclingContent) recyclingContent.classList.remove('show');
     if (toggleBtn) toggleBtn.classList.remove('active');
 
-    // Actualizar botones
     document.querySelectorAll('.mode-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     event.target.classList.add('active');
 
-    // Mostrar/ocultar secciones
     if (mode === 'webcam') {
         document.getElementById('webcam-section').style.display = 'flex';
         document.getElementById('upload-section').style.display = 'none';
@@ -349,11 +328,9 @@ function switchMode(mode) {
             initWebcam();
         }
     } else {
-        // Mostrar upload y ocultar webcam
         document.getElementById('webcam-section').style.display = 'none';
         document.getElementById('upload-section').style.display = 'flex';
 
-        // Detener webcam si está activa
         if (webcam) {
             try {
                 if (typeof webcam.stop === 'function') webcam.stop();
@@ -368,7 +345,6 @@ function switchMode(mode) {
             isWebcamActive = false;
         }
 
-        // Limpiar canvas de webcam
         const canvas = document.getElementById('webcam-canvas');
         if (canvas) {
             const ctx = canvas.getContext('2d');
@@ -376,30 +352,24 @@ function switchMode(mode) {
             canvas.style.display = 'none';
         }
 
-        // Limpiar preview de upload
         const preview = document.getElementById('preview-image');
         if (preview) {
             preview.src = '';
             preview.style.display = 'none';
         }
 
-        // Ocultar botón de clasificar
         const classifyBtn = document.getElementById('classify-image-btn');
         if (classifyBtn) classifyBtn.style.display = 'none';
     }
 
-    // Mostrar u ocultar configuraciones específicas de webcam
     const quickConfig = document.querySelector('.quick-config');
     if (quickConfig) {
-        // ocultar las opciones de webcam cuando estamos en modo 'upload'
         quickConfig.style.display = mode === 'upload' ? 'none' : '';
     }
 
-    // Asegurar que los controles de captura estén ocultos en modo upload
     const captureControls = document.getElementById('capture-controls');
     if (captureControls) {
         if (mode === 'upload') captureControls.style.display = 'none';
-        // si volvemos a webcam, respetar el modo actual (capture/continuous)
         else captureControls.style.display = webcamMode === 'capture' ? 'block' : 'none';
     }
 }
@@ -439,7 +409,6 @@ async function classifyUploadedImage() {
         document.getElementById('prediction').innerHTML = '<div class="loading-spinner"></div>Clasificando...';
         document.getElementById('confidence').textContent = '';
 
-        // Hacer predicción
         const predictions = await model.predict(img);
         displayPrediction(predictions);
 
@@ -450,12 +419,10 @@ async function classifyUploadedImage() {
 }
 
 function displayPrediction(predictions) {
-    // Encontrar la predicción con mayor confianza
     const topPrediction = predictions.reduce((max, current) =>
         current.probability > max.probability ? current : max
     );
 
-    // Determinar la confianza en porcentaje
     const confidencePercent = (topPrediction.probability * 100);
 
     if (!isNaN(confidencePercent) && confidencePercent >= 90) {
@@ -464,7 +431,6 @@ function displayPrediction(predictions) {
         lastTopPrediction = null;
     }
 
-    // Si el modal está abierto, no actualizar la UI (evitar que cambie mientras el usuario lee)
     if (isModalOpen) {
         console.log('Modal abierto — no se actualiza la etiqueta');
         return;
@@ -496,10 +462,8 @@ function renderTopPrediction(topPrediction) {
     typeEl.className = `waste-type-label ${typeClass}`;
     typeEl.textContent = typeLabel;
 
-    // Mostrar resultado solo si la confianza alcanza el umbral
     const confidenceNum = parseFloat(confidence);
     if (!isNaN(confidenceNum) && confidenceNum >= 90) {
-        // Confianza suficiente: mostrar etiqueta, tipo y botón de información
         predictionDiv.appendChild(resultEl);
         predictionDiv.appendChild(typeEl);
 
@@ -520,7 +484,6 @@ function renderTopPrediction(topPrediction) {
 
 function formatLabel(className) {
     const label = className.toLowerCase();
-    // Mapear etiquetas esperadas a textos legibles
     if (label.includes('lata')) return 'Lata';
     if (label.includes('botella de vidrio')) return 'Botella de vidrio';
     if (label.includes('botella')) return 'Botella (plástico)';
@@ -562,7 +525,6 @@ function showSection(sectionId) {
         return;
     }
 
-    // Mostrar/ocultar solo las secciones de contenido, sin tocar la vista contenedora
     if (sectionId === 'webcam-section') {
         webcamSection.style.display = 'flex';
         uploadSection.style.display = 'none';
@@ -576,7 +538,6 @@ function showSection(sectionId) {
         return;
     }
 
-    // Limpiar resultados y previsualizaciones al cambiar de sección
     const resultContainer = document.getElementById('result');
     const preview = document.getElementById('imagePreview');
     if (resultContainer) resultContainer.textContent = '';
@@ -593,15 +554,12 @@ function setWebcamMode(mode) {
     if (recyclingContent) recyclingContent.classList.remove('show');
     if (toggleBtn) toggleBtn.classList.remove('active');
 
-    // Actualizar botones
     document.getElementById('continuous-mode-btn').classList.toggle('active', mode === 'continuous');
     document.getElementById('capture-mode-btn').classList.toggle('active', mode === 'capture');
 
-    // Mostrar/ocultar controles de captura
     const captureControls = document.getElementById('capture-controls');
     captureControls.style.display = mode === 'capture' ? 'block' : 'none';
 
-    // Reiniciar webcam si está activa
     if (webcam && currentMode === 'webcam') {
         initWebcam();
     }
@@ -629,10 +587,8 @@ async function captureAndClassify() {
         }
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // Guardar imagen para feedback
         currentImageData = canvas.toDataURL('image/jpeg', 0.8);
 
-        // Modo individual: usar imagen completa
         const predictions = await model.predict(canvas);
         displayPrediction(predictions);
 
@@ -899,18 +855,15 @@ const recyclingInfo = {
     }
 };
 
-// Función para determinar el tipo de basura según la eiqueta
 function getWasteType(label) {
     const normalizedLabel = label.toLowerCase().trim();
 
-    // Buscar coincidencias exactas o parciales
     for (const [key, info] of Object.entries(recyclingInfo)) {
         if (normalizedLabel.includes(key) || key.includes(normalizedLabel)) {
             return info;
         }
     }
 
-    // Si no encuentra coincidencia, devolver información por defecto
     return {
         type: 'no-reciclable',
         title: 'Objeto Desconocido',
@@ -935,7 +888,6 @@ function toggleRecyclingInfo() {
         toggleBtn.classList.remove('active');
     } else {
 
-        // Si hay una última predicción válida, mostrar su información; si no, mostrar guía general de reciclaje
         const labelToShow = lastTopPrediction && lastTopPrediction.className ? lastTopPrediction.className : null;
         updateRecyclingInfo(labelToShow);
         recyclingContent.classList.add('show');
@@ -943,12 +895,10 @@ function toggleRecyclingInfo() {
     }
 }
 
-// Función para actualizar el contenido del menú desplegable
 function updateRecyclingInfo(label) {
     let wasteInfo;
 
     if (!label) {
-        // Contenido por defecto cuando no hay predicción: guía básica de reciclaje
         wasteInfo = {
             type: 'info',
             title: 'Información de Reciclaje',
@@ -970,13 +920,11 @@ function updateRecyclingInfo(label) {
         wasteInfo = getWasteType(label);
     }
 
-    // Actualizar contenido
     const titleEl = document.getElementById('info-title');
     const descEl = document.getElementById('info-description');
     if (titleEl) titleEl.textContent = wasteInfo.title;
     if (descEl) descEl.textContent = wasteInfo.description;
 
-    // Actualizar tipo con estilos
     const typeElement = document.getElementById('info-type');
     if (typeElement) {
         if (wasteInfo.type === 'reciclable') {
@@ -1021,7 +969,6 @@ function clearResults() {
     if (conf) conf.textContent = '';
     
     lastTopPrediction = null;
-    // Restaurar guía general en el menú de reciclaje
     try {
         updateRecyclingInfo(null);
     } catch (e) {
