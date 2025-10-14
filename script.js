@@ -118,11 +118,11 @@ async function initWebcam() {
             await new Promise(res => setTimeout(res, 150));
         }
 
-        // Detectar si es móvil para preferir cámara trasera
+        // Forzar uso de cámara trasera por defecto (environment) a menos que el usuario haya elegido lo contrario.
+        // Esto aplica en móviles y escritorio: siempre intentamos seleccionar una cámara trasera primero.
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        // Construir constraints iniciales
-        // Pedir una resolución alta ideal para usar la mejor calidad disponible
+        // Construir constraints iniciales (pedimos resolución alta ideal)
         let constraints = {
             video: {
                 width: { ideal: 1920 },
@@ -130,34 +130,33 @@ async function initWebcam() {
             }
         };
 
-        // Intentar seleccionar deviceId de cámara trasera en móviles cuando sea posible
+        // Intentar obtener deviceId de una cámara trasera disponible (no limitar solo a móviles)
         let selectedDeviceId = null;
-        if (isMobile && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
             try {
-                // Intentar enumerar dispositivos (las labels pueden estar vacías sin permiso)
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoInputs = devices.filter(d => d.kind === 'videoinput');
 
                 // Buscar por etiquetas comunes de cámara trasera
-                const rearRegex = /back|rear|traser|trasera|environment|camara trasera/i;
+                const rearRegex = /back|rear|traser|trasera|environment|camara trasera|rear camera/i;
                 const found = videoInputs.find(d => d.label && rearRegex.test(d.label));
                 if (found) {
                     selectedDeviceId = found.deviceId;
                     console.log('initWebcam: cámara trasera detectada por label:', found.label);
                 } else {
-                    // Si no hay label, solicitar permiso usando facingMode: 'environment' para forzar la trasera y obtener deviceId
+                    // Si no hay label (posiblemente sin permisos), solicitar temporalmente facingMode=environment
                     try {
-                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: 640, height: 480 } });
+                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: 640, height: 480 } });
                         const track = tempStream.getVideoTracks()[0];
                         const settings = track.getSettings && track.getSettings();
                         if (settings && settings.deviceId) {
                             selectedDeviceId = settings.deviceId;
-                            console.log('initWebcam: obtuvo deviceId tras permiso:', selectedDeviceId);
+                            console.log('initWebcam: obtuvo deviceId tras permiso temporal:', selectedDeviceId);
                         }
                         // detener stream temporal
                         track.stop();
                     } catch (permErr) {
-                        console.warn('initWebcam: no se pudo obtener permiso inicial con facingMode=environment:', permErr);
+                        console.warn('initWebcam: no se pudo obtener permiso temporal con facingMode=environment:', permErr);
                     }
                 }
             } catch (enumErr) {
@@ -168,15 +167,15 @@ async function initWebcam() {
         if (selectedDeviceId) {
             constraints.video.deviceId = { exact: selectedDeviceId };
         } else {
-            // fallback a facingMode (funciona en la mayoría de móviles)
-            // Respetar la preferencia del usuario (preferredFacing) cuando sea posible
-            const facingToUse = isMobile ? (preferredFacing || 'environment') : 'user';
-            constraints.video.facingMode = facingToUse;
+            // Fallback: usa facingMode igual a la preferencia (por defecto 'environment') para intentar la trasera
+            const facingToUse = preferredFacing || 'environment';
+            constraints.video.facingMode = { ideal: facingToUse };
         }
 
-        // Crear webcam (tmImage.Webcam)
-        const flip = !isMobile;
-        webcam = new tmImage.Webcam(640, 480, flip);
+    // Crear webcam (tmImage.Webcam)
+    // Si usamos la cámara frontal (user) debemos hacer flip true para que el video no se vea espejo
+    const flip = (preferredFacing === 'user');
+    webcam = new tmImage.Webcam(640, 480, flip);
 
         try {
             // Intento normal con la API de la librería
