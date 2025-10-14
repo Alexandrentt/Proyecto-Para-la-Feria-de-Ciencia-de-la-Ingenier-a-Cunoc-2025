@@ -1,26 +1,26 @@
-# 🌱 SARB - Sistema Automático de Reconocimiento de Basura
+# SARB - Sistema Automático de Reconocimiento de Basura
 
-## 📋 Descripción del Proyecto
+##  Descripción del Proyecto
 
 SARB (Sistema Automático de Reconocimiento de Basura) es un sistema inteligente de clasificación de residuos que utiliza Inteligencia Artificial y aprendizaje automático para identificar y categorizar diferentes tipos de basura en tiempo real. Desarrollado con Teachable Machine de Google y TensorFlow.js, este proyecto busca facilitar el proceso de reciclaje mediante la identificación automática de materiales.
 
-## ✨ Características Principales
+##  Características Principales
 
-- **🎥 Clasificación en Tiempo Real**: Utiliza la webcam para identificar objetos instantáneamente
-- **📸 Modo de Captura**: Permite tomar fotografías individuales para análisis detallado
-- **📤 Carga de Imágenes**: Soporta la clasificación de imágenes desde archivos locales
-- **♻️ 13 Categorías de Residuos**:
+- ** Clasificación en Tiempo Real**: Utiliza la webcam para identificar objetos instantáneamente
+- ** Modo de Captura**: Permite tomar fotografías individuales para análisis detallado
+- ** Carga de Imágenes**: Soporta la clasificación de imágenes desde archivos locales
+- ** 13 Categorías de Residuos**:
   - **Reciclables**: Lata, Botella (plástico), Botella de vidrio, Caja de jugo, Caja de pizza, Papel/Cartón
   - **Orgánicos**: Manzana, Banano, Limón, Huevo (cáscara), Piña
   - **No Reciclables**: Plato (duroport), Vaso (duroport)
   - **Merma**: Basura sin valor de reciclaje
-- **📊 Información Detallada de Reciclaje**: Instrucciones específicas para cada tipo de residuo
-- **🎯 Confianza de Predicción**: Muestra el porcentaje de certeza en cada clasificación
-- **📱 Diseño Responsivo**: Optimizado para dispositivos móviles y escritorio
-- **🎨 Interfaz Moderna**: Diseño limpio con paleta de colores verde ecológica
-- **🔄 Modos de Operación**: Continuo (clasificación automática) y Captura (análisis individual)
+- ** Información Detallada de Reciclaje**: Instrucciones específicas para cada tipo de residuo
+- ** Confianza de Predicción**: Muestra el porcentaje de certeza en cada clasificación
+- ** Diseño Responsivo**: Optimizado para dispositivos móviles y escritorio
+- ** Interfaz Moderna**: Diseño limpio con paleta de colores verde ecológica
+- ** Modos de Operación**: Continuo (clasificación automática) y Captura (análisis individual)
 
-## 🛠️ Stack Tecnológico
+##  Stack Tecnológico
 
 - **HTML5**: Estructura semántica y moderna
 - **CSS3**: Estilos avanzados con variables CSS y diseño responsivo
@@ -32,7 +32,7 @@ SARB (Sistema Automático de Reconocimiento de Basura) es un sistema inteligente
   - `Canvas API`: Procesamiento de imágenes
   - `FileReader API`: Carga de archivos locales
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 Proyecto Feria cientifica/
@@ -65,7 +65,7 @@ Proyecto Feria cientifica/
     └── vidrio botella/     # Imágenes de botellas de vidrio
 ```
 
-## 🚀 Instalación y Uso
+##  Instalación y Uso
 
 ### Requisitos Previos
 
@@ -120,7 +120,7 @@ Proyecto Feria cientifica/
 3. Presiona "Clasificar Imagen"
 4. Visualiza los resultados y la información de reciclaje
 
-## 🤖 Configuración del Modelo
+##  Configuración del Modelo
 
 ### Categorías Entrenadas
 
@@ -171,7 +171,7 @@ Si deseas entrenar tu propio modelo:
 - JavaScript habilitado
 - Permisos de cámara otorgados
 
-## 🎯 Funcionalidades Clave
+##  Funcionalidades Clave
 
 ### Detección Inteligente de Cámara
 
@@ -199,19 +199,6 @@ Para cada objeto detectado, el sistema proporciona:
 - **Móvil**: Interfaz optimizada con elementos apilados
 - **Tablet**: Diseño adaptativo intermedio
 
-## 🔮 Mejoras Futuras
-
-- [ ] Agregar más categorías de residuos (electrónicos, textiles, etc.)
-- [ ] Implementar sistema de recomendaciones de reciclaje personalizadas
-- [ ] Crear versión de aplicación móvil nativa (iOS/Android)
-- [ ] Añadir soporte multiidioma (inglés, francés, portugués)
-- [ ] Integrar geolocalización para puntos de reciclaje cercanos
-- [ ] Implementar historial de clasificaciones con estadísticas
-- [ ] Agregar modo offline con modelo descargable
-- [ ] Crear API REST para integración con otros sistemas
-- [ ] Implementar gamificación con puntos y logros
-- [ ] Añadir exportación de datos en formato CSV/JSON
-
 ## 👥 Créditos
 
 **SARB - Sistema Automático de Reconocimiento de Basura**
@@ -222,11 +209,10 @@ Para cada objeto detectado, el sistema proporciona:
 
 ### Agradecimientos
 
-- Google Teachable Machine por la plataforma de entrenamiento
-- TensorFlow.js por el framework de ML en navegador
-- Comunidad de código abierto por las herramientas y recursos
+- Facultad de Ingeniería del Centro Universitaicion de Occidente
+- Zi, si estás leyendo esto.
 
-## 📄 Licencia
+##  Licencia
 
 Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
 
@@ -254,19 +240,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## 📞 Contacto
-
-Para preguntas, sugerencias o colaboraciones:
-
-- **Email**: sarb.proyecto@example.com
-- **GitHub**: [github.com/sarb-proyecto](https://github.com/sarb-proyecto)
-- **Sitio Web**: [sarb-proyecto.com](https://sarb-proyecto.com)
-
----
 
 <div align="center">
 
-**🌍 Construyendo un futuro más verde, una clasificación a la vez 🌱**
+** Construyendo un futuro más verde, una clasificación a la vez **
 
 [![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red.svg)](https://github.com/sarb-proyecto)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow.svg)](https://www.javascript.com/)
